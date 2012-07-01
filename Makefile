@@ -6,12 +6,11 @@ DIR := $(shell basename `pwd`)
 
 MAKECMDGOALS ?= linux
 
-linux pi qemu:
+linux pi:
 	for TRG in $(TARGETS) ; do $(MAKE) -C $$TRG $(MAKECMDGOALS) ; done
 
 clean:
 	for TRG in $(TARGETS) ; do $(MAKE) -C $$TRG $(MAKECMDGOALS) ; done
-	#cd doc && $(MAKE) clean
 
 force:
 

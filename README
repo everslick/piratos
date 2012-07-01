@@ -1,4 +1,16 @@
-piratos
-=======
+pir{a}tos
+=========
 
-FreeRTOS based OS for the Raspberry Pi
+A FreeRTOS based OS for the Raspberry Pi
+
+pir{a}tos is planed to become a small realtime OS for the Raspberr Pi.
+Therefor it will lack most of the features one expects from a modern
+operating system to begin with. That means, no MMU support (i.e. no virtual
+memory nor memory protection), no dynamic linking, no GUI, no nothing.
+What you get though is a small codebase that you can hack the hell out.
+
+At its current state it compiles a linux binary that you can test on
+your linux box. The program does a little FatFS test, then starts 4
+realtime tasks that each prints a letter (A to D) at different intervals.
+Nothing specteculer yet, I have to admit. The Pi build is completely
+useless. I will work on it as soon as I get my Pi.

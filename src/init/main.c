@@ -102,7 +102,7 @@ fat_test() {
 	sd_fini();
 }
 
-void piratos() {
+void piratos(void) {
 	print_uart0("pir{a}tos version " VERSION " (" PLATFORM ")");
 
 	CreateFlashTasks();

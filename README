@@ -1,9 +1,9 @@
-pir{a}tos
+pir{A}tos
 =========
 
-A FreeRTOS based OS for the Raspberry Pi
+A FreeRTOS based OS for the Raspberry Pi (http://raspberrypi.org)
 
-pir{a}tos is planed to become a small realtime OS for the Raspberr Pi.
+pir{A}tos is planed to become a small realtime OS for the Raspberr Pi.
 Therefor it will lack most of the features one expects from a modern
 operating system to begin with. That means, no MMU support (i.e. no virtual
 memory nor memory protection), no dynamic linking, no GUI, no nothing.

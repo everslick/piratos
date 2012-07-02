@@ -1,5 +1,7 @@
 #include <string.h>
 
+#define KERNEL
+
 #ifndef KERNEL
 #include <ctype.h>
 #endif

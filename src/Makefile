@@ -19,12 +19,15 @@ LD        = $(ARCH)-ld
 AR        = $(ARCH)-ar
 OBJCOPY   = $(ARCH)-objcopy
 
+AFLAGS    = -march=arm -mcpu=arm1176jzf-s
+CFLAGS    = -marm -mcpu=arm1176jzf-s
+
 else
 
 PLATFORM  = linux
 
 CFLAGS    = `sdl-config --cflags`
-LFLAGS    = `sdl-config --libs`   -lrt -lpthread
+LFLAGS    = `sdl-config --libs` -lrt -lpthread
 
 endif
 
@@ -80,6 +83,7 @@ pi: $(OBJ)
 
 clean:
 	rm -f $(TARGET) $(KERNEL) $(IMAGE) $(MAP) $(OBJ)
+	find . -name *.o -exec rm -rf {} \;
 
 %.o: %.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c -o $*.o $<

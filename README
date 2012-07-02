@@ -14,3 +14,5 @@ your linux box. The program does a little FatFS test, then starts 4
 realtime tasks that each prints a letter (A to D) at different intervals.
 Nothing specteculer yet, I have to admit. The Pi build is completely
 useless. I will work on it as soon as I get my Pi.
+
+All code is GPL (V2), copyright by various authors glued together by me.

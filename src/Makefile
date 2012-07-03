@@ -54,7 +54,7 @@ MODULES  += init                       \
             kernel/hal/fb/$(PLATFORM)  \
             kernel/hal/kbd             \
             kernel/hal/kbd/$(PLATFORM) \
-            kernel/fs                  \
+            fs                         \
             basic
 
 CFLAGS   += -std=gnu99                 \

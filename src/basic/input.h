@@ -21,19 +21,18 @@
 **	This file defines the keyboard handling routines
 */
 
-#ifndef __keyboard_h
-#define __keyboard_h
+#ifndef _INPUT_H_
+#define _INPUT_H_
 
 #include "common.h"
 
 typedef enum {READ_OK, READ_ESC, READ_EOF} readstate;
 
-extern int32 emulate_get(void);
-extern int32 read_key(void);
-extern int32 emulate_inkey(int32);
-extern readstate emulate_readline(char [], int32);
-extern void set_fn_string(int key, char *string, int length);
-extern boolean init_keyboard(void);
-extern void end_keyboard(void);
+int32 emulate_get(void);
+int32 emulate_inkey(int32);
+readstate emulate_readline(char [], int32);
+void set_fn_string(int key, char *string, int length);
+boolean init_keyboard(void);
+void end_keyboard(void);
 
-#endif
+#endif // _INPUT_H_

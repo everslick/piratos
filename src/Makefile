@@ -52,6 +52,8 @@ MODULES  += init                       \
             kernel/hal/sd/$(PLATFORM)  \
             kernel/hal/fb              \
             kernel/hal/fb/$(PLATFORM)  \
+            kernel/hal/kbd             \
+            kernel/hal/kbd/$(PLATFORM) \
             kernel/fs                  \
             basic
 

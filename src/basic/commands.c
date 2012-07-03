@@ -26,6 +26,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+
 #include "common.h"
 #include "target.h"
 #include "basicdefs.h"
@@ -40,7 +41,7 @@
 #include "strings.h"
 #include "evaluate.h"
 #include "screen.h"
-#include "keyboard.h"
+#include "input.h"
 
 #ifdef TARGET_RISCOS
 #include "kernel.h"

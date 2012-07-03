@@ -25,6 +25,7 @@
 #include <setjmp.h>
 #include <string.h>
 #include <ctype.h>
+
 #include "common.h"
 #include "target.h"
 #include "basicdefs.h"
@@ -36,7 +37,7 @@
 #include "statement.h"
 #include "fileio.h"
 #include "emulate.h"
-#include "keyboard.h"
+#include "input.h"
 #include "screen.h"
 #include "miscprocs.h"
 
@@ -64,9 +65,10 @@ static struct loadlib {char *name; struct loadlib *next;} *liblist, *liblast;
 ** 'run_interpreter' is called. The program finishes when 'exec_quit'
 ** (in statement.c) is invoked. 'exec_quit' handles the 'QUIT' command
 */
-int basic_init(int argc, char *argv[]) {
+//int basic_init(int argc, char *argv[]) {
+int init_basic() {
   init1();
-  check_cmdline(argc, argv);
+  //check_cmdline(argc, argv);
   init2();
   run_interpreter();
   return EXIT_FAILURE;

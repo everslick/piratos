@@ -30,7 +30,7 @@
 #include "basicdefs.h"
 #include "tokens.h"
 #include "errors.h"
-#include "keyboard.h"
+#include "input.h"
 #include "screen.h"
 #include "miscprocs.h"
 

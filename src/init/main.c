@@ -10,6 +10,8 @@
 
 #define NUM_TASKS 4
 
+int init_basic(void);
+
 /* Structure used to pass parameters to the LED tasks. */
 typedef struct TASK_PARAMETERS {
 	char str[4];				/*< The output the task should use. */
@@ -108,6 +110,8 @@ void piratos(void) {
 	CreateFlashTasks();
 
 	fat_test();
+
+	init_basic();
 
 	vTaskStartScheduler();
 }

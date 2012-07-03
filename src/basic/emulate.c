@@ -51,7 +51,7 @@
 #include "basicdefs.h"
 #include "emulate.h"
 #include "screen.h"
-#include "keyboard.h"
+#include "input.h"
 
 #ifdef TARGET_RISCOS
 #include "kernel.h"

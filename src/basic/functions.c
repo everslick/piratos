@@ -32,6 +32,7 @@
 #include <math.h>
 #include <time.h>
 #include <ctype.h>
+
 #include "common.h"
 #include "target.h"
 #include "basicdefs.h"
@@ -42,7 +43,7 @@
 #include "stack.h"
 #include "errors.h"
 #include "evaluate.h"
-#include "keyboard.h"
+#include "input.h"
 #include "screen.h"
 #include "emulate.h"
 #include "miscprocs.h"

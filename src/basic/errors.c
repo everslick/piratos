@@ -37,7 +37,7 @@
 #include "screen.h"
 #include "evaluate.h"
 #include "miscprocs.h"
-#include "keyboard.h"
+#include "input.h"
 
 /*
 ** Error handling

@@ -54,8 +54,9 @@ MODULES  += init                       \
             kernel/hal/fb/$(PLATFORM)  \
             kernel/hal/kbd             \
             kernel/hal/kbd/$(PLATFORM) \
+            cli                        \
             fs                         \
-            basic
+				fs/fat
 
 CFLAGS   += -std=gnu99                 \
             -D__$(PLATFORM)__          \

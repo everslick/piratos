@@ -26,7 +26,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -54,7 +54,7 @@
      inkscape:window-x="153"
      inkscape:window-y="34"
      inkscape:window-maximized="0"
-     inkscape:current-layer="svg3087" />
+     inkscape:current-layer="g3133" />
   <defs
      id="defs3089">
     <g
@@ -169,7 +169,7 @@
          x="84.960938"
          y="124.125"
          id="use3127"
-         transform="translate(-8,0)"
+         transform="translate(-9.6,0)"
          width="801"
          height="344" />
       <use
@@ -177,7 +177,7 @@
          x="169.92188"
          y="124.125"
          id="use3129"
-         transform="translate(-16,0)"
+         transform="translate(-19.2,0)"
          width="801"
          height="344" />
       <use
@@ -185,7 +185,7 @@
          x="254.88281"
          y="124.125"
          id="use3131"
-         transform="translate(-28.8,0)"
+         transform="translate(-36.8,0)"
          width="801"
          height="344" />
     </g>
@@ -197,11 +197,12 @@
        sodipodi:cy="204.38939"
        sodipodi:rx="28.654194"
        sodipodi:ry="30.630344"
-       d="m 793.75411,204.38939 c 0,16.91667 -12.82892,30.63034 -28.6542,30.63034 -15.82527,0 -28.65419,-13.71367 -28.65419,-30.63034 0,-16.91667 12.82892,-30.63035 28.65419,-30.63035 15.82528,0 28.6542,13.71368 28.6542,30.63035 z"
-       transform="matrix(1.0390805,0,0,0.80860215,-176.06979,-74.021675)" />
+       d="m 793.75411,204.38939 a 28.654194,30.630344 0 1 1 -57.30839,0 28.654194,30.630344 0 1 1 57.30839,0 z"
+       transform="matrix(1.0390805,0,0,0.80860215,-201.66979,-74.021675)" />
     <g
        style="fill:#000000;fill-opacity:1"
-       id="g3133">
+       id="g3133"
+       transform="translate(-14.4,0)">
       <use
          xlink:href="#glyph0-4"
          x="462.10156"
@@ -215,7 +216,7 @@
          x="547.0625"
          y="123.55078"
          id="use3137"
-         transform="translate(-54.4,0)"
+         transform="translate(-60.8,0)"
          width="801"
          height="344" />
       <use
@@ -223,7 +224,7 @@
          x="632.02344"
          y="123.55078"
          id="use3139"
-         transform="translate(-56,0)"
+         transform="translate(-65.6,0)"
          width="801"
          height="344"
          style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:#18b300;stroke-opacity:1" />
@@ -232,14 +233,14 @@
          x="716.98438"
          y="123.55078"
          id="use3141"
-         transform="translate(-56,0)"
+         transform="translate(-72,0)"
          width="801"
          height="344" />
     </g>
     <g
        style="fill:#0082ab;fill-opacity:1"
        id="g3143"
-       transform="translate(-4.8,0)">
+       transform="translate(-16,0)">
       <use
          xlink:href="#glyph1-0"
          x="341.10156"

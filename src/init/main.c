@@ -6,11 +6,14 @@
 
 #include "fat_filelib.h"
 
-#include "sd.h"
+#include "fs.h"
+
+#include "shell.h"
 
 #define NUM_TASKS 4
 
-int init_basic(void);
+int init_kbd(void);
+int init_fb(void);
 
 /* Structure used to pass parameters to the LED tasks. */
 typedef struct TASK_PARAMETERS {
@@ -56,62 +59,14 @@ static void FlashTask(void *parameters) {
 	}
 }
 
-static void
-fat_test() {
-	FL_FILE *file;
-
-	// Initialise media
-	sd_init();
-
-	// Initialise File IO Library
-	fl_init();
-
-	// Attach media access functions to library
-	if (fl_attach_media(sd_read, sd_write) != FAT_INIT_OK) {
-		printf("ERROR: Media attach failed\n");
-		return; 
-	}
-
-	// List root directory
-	fl_listdirectory("/");
-
-	// Create File
-	file = fl_fopen("/file.bin", "w");
-	if (file) {
-		// Write some data
-		unsigned char data[] = { 1, 2, 3, 4 };
-		if (fl_fwrite(data, 1, sizeof(data), file) != sizeof(data))
-			printf("ERROR: Write file failed\n");
-	}
-	else
-		printf("ERROR: Create file failed\n");
-
-	// Close file
-	fl_fclose(file);
-
-	// List root directory
-	fl_listdirectory("/");
-
-	// Delete File
-	if (fl_remove("/file.bin") < 0)
-		printf("ERROR: Delete file failed\n");
-
-	// List root directory
-	fl_listdirectory("/");
-
-	fl_shutdown();
-
-	sd_fini();
-}
-
 void piratos(void) {
-	print_uart0("pir{a}tos version " VERSION " (" PLATFORM ")");
+	print_uart0("pir{A}tos Version " VERSION " (" PLATFORM ")");
 
 	CreateFlashTasks();
 
-	fat_test();
-
-	init_basic();
+	fs_init();
+	shell_init();
+	fs_fini();
 
 	vTaskStartScheduler();
 }

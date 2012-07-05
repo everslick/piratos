@@ -17,6 +17,7 @@
 
 char shell_prompt[PATH_MAX];
 char shell_cwd[PATH_MAX];
+char shell_owd[PATH_MAX];
 int  shell_error = 0;
 int  shell_quit  = 0;
 
@@ -33,6 +34,7 @@ SHELL_COMMAND_PROTOTYPE(halt)
 SHELL_COMMAND_PROTOTYPE(help)
 SHELL_COMMAND_PROTOTYPE(info)
 SHELL_COMMAND_PROTOTYPE(ls)
+SHELL_COMMAND_PROTOTYPE(mkdir)
 SHELL_COMMAND_PROTOTYPE(pwd)
 SHELL_COMMAND_PROTOTYPE(quit)
 
@@ -61,6 +63,7 @@ register_commands(void) {
 	SHELL_REGISTER_COMMAND(help)
 	SHELL_REGISTER_COMMAND(info)
 	SHELL_REGISTER_COMMAND(ls)
+	SHELL_REGISTER_COMMAND(mkdir)
 	SHELL_REGISTER_COMMAND(pwd)
 	SHELL_REGISTER_COMMAND(quit)
 }
@@ -132,7 +135,18 @@ shell_num_args(char **args) {
 }
 
 void
+shell_get_cwd(char *cwd) {
+	snprintf(cwd, PATH_MAX, "%s", shell_cwd);
+}
+
+void
+shell_get_owd(char *owd) {
+	snprintf(owd, PATH_MAX, "%s", shell_owd);
+}
+
+void
 shell_set_cwd(char *cwd) {
+	snprintf(shell_owd, PATH_MAX, "%s", shell_cwd);
 	snprintf(shell_cwd, PATH_MAX, "%s", cwd);
 }
 
@@ -143,25 +157,30 @@ shell_set_prompt(char *prompt) {
 
 void
 shell_clean_path(char *path, char *cleaned) {
-	char *src = path;
-	int src_len = strlen(src);
-	char *next, *end = &src[src_len];
-	char *ptr = src;
-	int res_len;
+	char *ptr, *next, *end;
+	int res_len, src_len;
+	char src[PATH_MAX];
 
-	if ((src_len == 0) || (src[0] != '/')) { // relative path
-		res_len = strlen(shell_cwd);
+	if (!path) {
+		// no path at all
+		sprintf(src, "%s", shell_cwd);
+	} else if (path[0] == '/') {
+		// absolute path
+		sprintf(src, "%s", path);
 	} else {
-		res_len = 0;
+		// relative path
+		sprintf(src, "%s/%s", shell_cwd, path);
 	}
 
-	for (ptr = src; ptr < end; ptr=next+1) {
+	res_len = 0;
+	src_len = strlen(src);
+	end = &src[src_len];
+
+	for (ptr=src; ptr<end; ptr=next+1) {
 		int len;
 
-		next = memchr(ptr, '/', end-ptr);
-		if (next == NULL) {
-			next = end;
-		}
+		next = memchr(ptr, '/', end - ptr);
+		if (next == NULL) next = end;
 		len = next - ptr;
 
 		switch (len) {
@@ -187,7 +206,7 @@ shell_clean_path(char *path, char *cleaned) {
 		res_len += len;
 	}
 
-	if (res_len == 0) cleaned[res_len++] = '/';
+	if (!res_len) cleaned[res_len++] = '/';
 
 	cleaned[res_len] = '\0';
 }

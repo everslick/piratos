@@ -27,13 +27,18 @@ cmd_cd_exec(char *argv[]) {
 		return (-1);
 	}
 
-	if (!fl_is_dir(argv[1])) {
-		printf("Invalid directory '%s'\n", argv[1]);
+	if (!strcmp(argv[1], "-")) {
+		shell_get_owd(path);
+	} else {
+		shell_clean_path(argv[1], path);
+	}
+
+	if (!fl_is_dir(path)) {
+		printf("Invalid directory '%s'\n", path);
 
 		return (-1);
 	}
 
-	shell_clean_path(argv[1], path);
 	shell_set_cwd(path);
 	shell_set_prompt(path);
 

@@ -26,43 +26,36 @@
 #ifndef _GETOPT_H_
 #define _GETOPT_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern int optind, opterr, optopt;
 extern char *optarg;
 
 struct option {
-  const char *name;
-  int has_arg;
-  int *flag;
-  int val;
+	const char *name;
+	int has_arg;
+	int *flag;
+	int val;
 };
 
-/* human-readable values for has_arg */
+// human-readable values for has_arg
 #undef no_argument
-#define no_argument 0
+#define no_argument       0
 #undef required_argument
 #define required_argument 1
 #undef optional_argument
 #define optional_argument 2
 
-/* reset argument parser to start-up values */
+// reset argument parser to start-up values
 int getopt_reset(void);
 
-/* UNIX-style short-argument parser */
-int getopt(int argc, char * argv[], const char *opts);
+// UNIX-style short-argument parser
+int getopt(int argc, char *argv[], const char *opts);
 
-/* GNU-style long-argument parsers */
-int getopt_long(int argc, char * argv[], const char *shortopts,
+// GNU-style long-argument parser
+int getopt_long(int argc, char *argv[], const char *shortopts,
                 const struct option *longopts, int *longind);
 
-int getopt_long_only(int argc, char * argv[], const char *shortopts,
+// GNU-style long-argument only parser
+int getopt_long_only(int argc, char *argv[], const char *shortopts,
                      const struct option *longopts, int *longind);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* _GETOPT_H_ */
+#endif // _GETOPT_H_

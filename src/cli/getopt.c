@@ -23,7 +23,6 @@
  *  DEALINGS IN THE SOFTWARE.
  */
 
-#include <sys/types.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,8 +31,8 @@
 
 #define POSIXLY_CORRECT 0
 
-int optind=1, opterr=1, optopt=0;
-char *optarg=0;
+int optind = 1, opterr = 1, optopt = 0;
+char *optarg = 0;
 
 /* this is the extended getopt_long{,_only}, with some GNU-like
  * extensions. Implements _getopt_internal in case any programs
@@ -169,12 +168,12 @@ getopt_internal(int argc, char * argv[], const char *shortopts,
 /* reset argument parser to start-up values */
 int
 getopt_reset(void) {
-    optind = 1;
-    opterr = 1;
-    optopt = 0;
-    optarg = 0;
+  optind = 1;
+  opterr = 1;
+  optopt = 0;
+  optarg = 0;
 
-    return 0;
+  return 0;
 }
 
 /* this is the plain old UNIX getopt, with GNU-style extensions. */
@@ -183,7 +182,7 @@ getopt_reset(void) {
 
 int
 getopt(int argc, char * argv[], const char *opts) {
-  static int charind=0;
+  static int charind = 0;
   const char *s;
   char mode, colon_mode;
   int off = 0, opt = -1;

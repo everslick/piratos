@@ -3,6 +3,5 @@
 
 int fs_init(void);
 int fs_fini(void);
-int fs_test(void);
 
 #endif // _FS_H_

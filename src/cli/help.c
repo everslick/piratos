@@ -17,9 +17,9 @@ cmd_help_exec(char *argv[]) {
 	printf("      cp: copy file                                        \n");
 	printf("      dd: copy a file, formatted according to the operands \n");
 	printf("    echo: print all arguments                              \n");
+	printf("      hd: hexdump a file to stdout                         \n");
 	printf("      ls: list (current working) directory                 \n");
 	printf("   mkdir: create directory                                 \n");
-	printf("  mkfile: create file with size                            \n");
 	printf("      mv: move and rename files and directories            \n");
 	printf("     pwd: print (current) working directory                \n");
 	printf("      rm: delete (remove) file                             \n");

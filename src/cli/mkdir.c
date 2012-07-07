@@ -2,8 +2,8 @@
 #include <string.h>
 
 #include "fat_filelib.h"
-
 #include "getopt.h"
+
 #include "shell.h"
 
 static struct option const long_options[] = {
@@ -26,9 +26,9 @@ cmd_mkdir_help(void) {
 /* This is kind of clunky, but effective for now */
 static int
 create_directory(char *path, int parents, int verbose) {
-	char *ptr, dir[PATH_MAX], buf[PATH_MAX];
+	char dir[PATH_MAX], buf[PATH_MAX];
+	char *ptr, *save, *dirs[255];
 	FL_DIR dirstat, *dirp;
-	char *dirs[255];
 	int i = 0;
 
 	shell_clean_path(path, dir);
@@ -51,9 +51,9 @@ create_directory(char *path, int parents, int verbose) {
 			printf("mkdir: created directory '%s'\n", dir);
 		}
 	} else {
-		dirs[i] = strtok(dir, "/");
+		dirs[i] = strtok_r(dir, "/", &save);
 		while (dirs[i] && (i < 255)) {
-			dirs[++i] = strtok(NULL, "/");
+			dirs[++i] = strtok_r(NULL, "/", &save);
 		}
 
 		ptr = buf; i = 0;

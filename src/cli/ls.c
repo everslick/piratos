@@ -11,6 +11,25 @@ cmd_ls_help(void) {
 	printf("If no path is given the current working directory is used. \n");
 }
 
+void
+list_directory(const char *path) {
+    FL_DIR dirstat;
+
+    if (fl_opendir(path, &dirstat)) {
+        struct fs_dir_ent dirent;
+
+        while (fl_readdir(&dirstat, &dirent) == 0) {
+            if (dirent.is_dir) {
+                printf("%s \t<DIR>\n", dirent.filename);
+            } else {
+                printf("%s \t[%d bytes]\n", dirent.filename, (int)dirent.size);
+            }
+        }
+
+        fl_closedir(&dirstat);
+    }
+}
+
 int
 cmd_ls_exec(char *argv[]) {
 	int argc = shell_num_args(argv);
@@ -23,7 +42,7 @@ cmd_ls_exec(char *argv[]) {
 	}
 
 	if (argc < 2) {
-		shell_clean_path("", path); // cwd
+		shell_clean_path(NULL, path); // cwd
 	} else {
 		shell_clean_path(argv[1], path);
 	}
@@ -34,7 +53,7 @@ cmd_ls_exec(char *argv[]) {
 		return (-1);
 	}
 
-	fl_listdirectory(path);
+	list_directory(path);
 
 	return (0);
 }

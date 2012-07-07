@@ -27,16 +27,23 @@ struct {
 	void (*help)(void);
 } shell_commands[MAX_COMMAND_NUM];
 
+SHELL_COMMAND_PROTOTYPE(cat)
 SHELL_COMMAND_PROTOTYPE(cd)
 SHELL_COMMAND_PROTOTYPE(clean)
+SHELL_COMMAND_PROTOTYPE(cp)
+SHELL_COMMAND_PROTOTYPE(dd)
 SHELL_COMMAND_PROTOTYPE(echo)
 SHELL_COMMAND_PROTOTYPE(halt)
+SHELL_COMMAND_PROTOTYPE(hd)
 SHELL_COMMAND_PROTOTYPE(help)
 SHELL_COMMAND_PROTOTYPE(info)
 SHELL_COMMAND_PROTOTYPE(ls)
 SHELL_COMMAND_PROTOTYPE(mkdir)
+SHELL_COMMAND_PROTOTYPE(mv)
 SHELL_COMMAND_PROTOTYPE(pwd)
 SHELL_COMMAND_PROTOTYPE(quit)
+SHELL_COMMAND_PROTOTYPE(rm)
+SHELL_COMMAND_PROTOTYPE(touch)
 
 static void
 register_command(const char *name, int (*exec)(char **), void (*help)(void)) {
@@ -56,16 +63,23 @@ register_commands(void) {
 
 	memset(shell_commands, 0, sizeof (shell_commands));
 
+	//SHELL_REGISTER_COMMAND(cat)
 	SHELL_REGISTER_COMMAND(cd)
 	SHELL_REGISTER_COMMAND(clean)
+	//SHELL_REGISTER_COMMAND(cp)
+	SHELL_REGISTER_COMMAND(dd)
 	SHELL_REGISTER_COMMAND(echo)
 	SHELL_REGISTER_COMMAND(halt)
+	SHELL_REGISTER_COMMAND(hd)
 	SHELL_REGISTER_COMMAND(help)
 	SHELL_REGISTER_COMMAND(info)
 	SHELL_REGISTER_COMMAND(ls)
 	SHELL_REGISTER_COMMAND(mkdir)
+	//SHELL_REGISTER_COMMAND(mv)
 	SHELL_REGISTER_COMMAND(pwd)
 	SHELL_REGISTER_COMMAND(quit)
+	//SHELL_REGISTER_COMMAND(rm)
+	SHELL_REGISTER_COMMAND(touch)
 }
 
 static int
@@ -152,7 +166,7 @@ shell_set_cwd(char *cwd) {
 
 void
 shell_set_prompt(char *prompt) {
-	snprintf(shell_prompt, PATH_MAX, "%s$ ", prompt);
+	snprintf(shell_prompt, PATH_MAX, "root:%s# ", prompt);
 }
 
 void
@@ -180,7 +194,7 @@ shell_clean_path(char *path, char *cleaned) {
 		int len;
 
 		next = memchr(ptr, '/', end - ptr);
-		if (next == NULL) next = end;
+		if (!next) next = end;
 		len = next - ptr;
 
 		switch (len) {

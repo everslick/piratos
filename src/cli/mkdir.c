@@ -23,7 +23,6 @@ cmd_mkdir_help(void) {
 	);
 }
 
-/* This is kind of clunky, but effective for now */
 static int
 create_directory(char *path, int parents, int verbose) {
 	char dir[PATH_MAX], buf[PATH_MAX];
@@ -97,7 +96,7 @@ cmd_mkdir_exec(char *argv[]) {
 		return (-1);
 	}
 
-	for (i = optind + 1; argv[i]; i++) {
+	for (i=optind+1; argv[i]; i++) {
 		create_directory(argv[i], parents, verbose);
 	}
 

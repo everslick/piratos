@@ -43,19 +43,21 @@ AFLAGS   += -g
 
 endif
 
-MODULES  += init                       \
-            kernel/os                  \
-            kernel/os/$(PLATFORM)      \
-            kernel/boot                \
-            kernel/boot/$(PLATFORM)    \
-            kernel/hal/sd              \
-            kernel/hal/sd/$(PLATFORM)  \
-            kernel/hal/fb              \
-            kernel/hal/fb/$(PLATFORM)  \
-            kernel/hal/kbd             \
-            kernel/hal/kbd/$(PLATFORM) \
-            cli                        \
-            fs                         \
+MODULES  += init                         \
+            kernel/os                    \
+            kernel/os/$(PLATFORM)        \
+            kernel/boot                  \
+            kernel/boot/$(PLATFORM)      \
+            kernel/hal/sd                \
+            kernel/hal/sd/$(PLATFORM)    \
+            kernel/hal/fb                \
+            kernel/hal/fb/$(PLATFORM)    \
+            kernel/hal/kbd               \
+            kernel/hal/kbd/$(PLATFORM)   \
+            kernel/hal/mouse             \
+            kernel/hal/mouse/$(PLATFORM) \
+            cli                          \
+            fs                           \
 				fs/fat
 
 CFLAGS   += -std=gnu99                 \

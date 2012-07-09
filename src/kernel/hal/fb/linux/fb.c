@@ -2,14 +2,13 @@
 
 #include "fb.h"
 
-#define FB_MODES 14
-
-typedef struct FbMode {
-	int width, height;
+typedef struct ModeDescriptor {
+	int width;
+	int height;
 	const char *description; 
-} FbMode;
+} ModeDescriptor;
 
-static FbMode fb_modes[FB_MODES] = {
+static ModeDescriptor fb_modes[] = {
 	{  640,  350, "EGA"          },
 	{  640,  480, "VGA"          },
 	{  800,  600, "SVGA"         },
@@ -28,45 +27,221 @@ static FbMode fb_modes[FB_MODES] = {
 
 static SDL_Surface *screen = NULL;
 
-static int pixel_format   = 0;
-static int bits_per_pixel = 0;
+static int fb_pixel_format   = 0;
+static int fb_bits_per_pixel = 0;
+
+static void
+FB2SDL_Rectangle(FB_Rectangle *in, SDL_Rect *out) {
+	if (!in || !out) return;
+
+	out->x = in->x;
+	out->y = in->y;
+	out->w = in->w;
+	out->h = in->h;
+}
+
+static void
+SDL2FB_Rectangle(SDL_Rect *in, FB_Rectangle *out) {
+	if (!in || !out) return;
+
+	out->x = in->x;
+	out->y = in->y;
+	out->w = in->w;
+	out->h = in->h;
+}
+
+static void
+FB2SDL_Color(FB_Color *in, SDL_Color *out) {
+	if (!in || !out) return;
+
+	out->r      = in->r;
+	out->g      = in->g;
+	out->b      = in->b;
+	out->unused = in->a;
+}
+
+static void
+SDL2FB_Color(SDL_Color *in, FB_Color *out) {
+	if (!in || !out) return;
+
+	out->r = in->r;
+	out->g = in->g;
+	out->b = in->b;
+	out->a = in->unused;
+}
+
+static int
+bits_per_pixel(FB_Format format) {
+	switch (format) {
+		case FB_FORMAT_BEST:
+		case FB_FORMAT_RGBA8888: return (32);
+		case FB_FORMAT_RGB888:   return (24);
+		case FB_FORMAT_RGB565:
+		case FB_FORMAT_RGBA4444:
+		case FB_FORMAT_RGBA5551: return (16);
+		case FB_FORMAT_RGB332:   return (8);
+	}
+
+	return (0);
+}
 
 int
 fb_init(void) {
-	/* Initialize SDL */
 	SDL_Init(SDL_INIT_VIDEO);
-	
-	return (1);
+
+	return (0);
 }
 
 int
 fb_fini(void) {
-	return (1);
+	//SDL_QuitSubsystem(SDL_INIT_VIDEO);
+
+	SDL_Quit();
+
+	return (0);
 }
 
 int
-fb_mode(int mode, FbFormat format) {
-	int bpp = 0;
+fb_mode(FB_Mode mode, FB_Format format) {
+	int bpp = bits_per_pixel(format);
 
-	switch (format) {
-		case FB_FORMAT_RGB888:
-			bpp = 24;
-		break;
-		case FB_FORMAT_RGB565:
-		case FB_FORMAT_ARGB4444:
-		case FB_FORMAT_ARGB1555:
-			bpp = 16;
-		break;
-		case FB_FORMAT_RGB332:
-			bpp = 8;
-		break;
-		default:
-			bpp = 32;
-		break;
-	}
-
-	/* Initialize the screen / window */
 	screen = SDL_SetVideoMode(fb_modes[mode].width, fb_modes[mode].height, bpp, SDL_SWSURFACE);
 
-	return (1);
+	fb_pixel_format   = format;
+	fb_bits_per_pixel = bpp;
+
+	return (0);
+}
+
+void
+fb_blit(FB_Surface *src, FB_Rectangle *rect, int x, int y, FB_Rectangle *clip) {
+	SDL_Rect sdl_rect, sdl_clip, sdl_dest;
+	SDL_Rect *r = NULL, *d = NULL;
+
+	if (rect) {
+		FB2SDL_Rectangle(rect, &sdl_rect);
+		r = &sdl_rect;
+	}
+
+	if (clip) {
+		FB2SDL_Rectangle(clip, &sdl_clip);
+		SDL_SetClipRect(screen, &sdl_clip);
+	}
+
+	sdl_dest.x = x;
+	sdl_dest.y = y;
+
+	SDL_BlitSurface(src->user, r,  screen, &sdl_dest);
+
+	SDL2FB_Rectangle(&sdl_dest, clip);
+}
+
+void
+fb_flip(FB_Rectangle *rect) {
+	if (rect) {
+		SDL_UpdateRect(screen, rect->x, rect->y, rect->w, rect->h);
+	} else {
+		SDL_Flip(screen);
+	}
+}
+
+FB_Surface *
+fb_create_surface(int w, int h, FB_Format format) {
+	SDL_Surface *sdl_surface, *tmp_surface;
+	int bpp = bits_per_pixel(format);
+	FB_Surface *fb_surface;
+
+	tmp_surface = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, bpp, 0, 0, 0, 0);
+	sdl_surface = SDL_DisplayFormatAlpha(tmp_surface);
+	SDL_FreeSurface(tmp_surface);
+
+	fb_surface = malloc(sizeof (FB_Surface));
+
+	fb_surface->format = format;
+	fb_surface->flags  = sdl_surface->flags;
+	fb_surface->width  = sdl_surface->w;
+	fb_surface->height = sdl_surface->h;
+	fb_surface->pitch  = sdl_surface->pitch;
+	fb_surface->pixels = sdl_surface->pixels;
+	fb_surface->user   = sdl_surface;
+
+	return (fb_surface);
+}
+
+void
+fb_release_surface(FB_Surface *surface) {
+	SDL_FreeSurface(surface->user);
+
+	free(surface);
+}
+
+void
+fb_fill(FB_Surface *surface, FB_Rectangle *rect, FB_Color *color) {
+	SDL_Rect *r = NULL, sdl_rect;
+	SDL_Surface *dst;
+	unsigned int c;
+
+	if (rect) {
+		FB2SDL_Rectangle(rect, &sdl_rect);
+		r = &sdl_rect;
+	}
+
+	if (surface) {
+		dst = surface->user;
+	} else {
+		dst = screen;
+	}
+
+	c = SDL_MapRGBA(dst->format, color->r, color->g, color->b, color->a);
+
+	SDL_FillRect(dst, r, c);
+}
+
+void
+fb_set_pixel(FB_Surface *surface, int x, int y, FB_Color *color) {
+	unsigned int pixel;
+	SDL_Surface *dst;
+	int bpp;
+
+	if (surface) {
+		dst = surface->user;
+	} else {
+		dst = screen;
+	}
+
+	bpp = dst->format->BytesPerPixel; 
+	pixel = SDL_MapRGBA(dst->format, color->r, color->g, color->b, color->a);
+
+	// Here p is the address to the pixel we want to set 
+	unsigned char *p = (unsigned char *)dst->pixels + y * dst->pitch + x * bpp; 
+
+	switch (bpp) { 
+		case 1: 
+			*p = pixel; 
+		break; 
+
+		case 2: 
+			*(unsigned short int *)p = pixel; 
+		break; 
+
+		case 3: 
+			if(SDL_BYTEORDER == SDL_BIG_ENDIAN) { 
+				p[0] = (pixel >> 16) & 0xff; 
+				p[1] = (pixel >> 8) & 0xff; 
+				p[2] = pixel & 0xff; 
+			} else { 
+				p[0] = pixel & 0xff; 
+				p[1] = (pixel >> 8) & 0xff; 
+				p[2] = (pixel >> 16) & 0xff; 
+			} 
+		break; 
+
+		case 4: 
+			*(unsigned int *)p = pixel; 
+		break; 
+	} 
+}
+
+void
+fb_get_pixel(FB_Surface *surface, int x, int y, FB_Color *color) {
 }

@@ -20,9 +20,9 @@ kbd_poll(KBD_Event *ev) {
 	SDL_Event sdl_ev;
 
 	if (ev) {
-		ev->type = KBD_EVENT_TYPE_NONE;
-		ev->state = KBD_EVENT_STATE_NONE;
-		ev->symbol = 0;
+		ev->type     = KBD_EVENT_TYPE_NONE;
+		ev->state    = KBD_EVENT_STATE_NONE;
+		ev->symbol   = 0;
 		ev->modifier = 0;
 	}
 

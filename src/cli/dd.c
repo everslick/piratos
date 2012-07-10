@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "fat_filelib.h"
@@ -19,10 +18,10 @@ static struct option const long_options[] = {
 
 void
 cmd_dd_help(void) {
-	printf("'dd' dump and format file contents.                             \n");
-	printf("                                                                \n");
-	printf("Usage:  dd -i infile -o outfile [-b block] [-c count] [-s skip] \n");
-	printf("                                [-k seek] [-v]                  \n");
+	shell_print("'dd' dump and format file contents.                             \n");
+	shell_print("                                                                \n");
+	shell_print("Usage:  dd -i infile -o outfile [-b block] [-c count] [-s skip] \n");
+	shell_print("                                [-k seek] [-v]                  \n");
 }
 
 static int
@@ -65,24 +64,24 @@ cmd_dd_exec(char *argv[]) {
 	}
 
 	if (verbose) {
-		printf("inname  = %s\n", inname);
-		printf("outname = %s\n", outname);
-		printf("block   = %i\n", block);
-		printf("skip    = %i\n", skip);
-		printf("seek    = %i\n", seek);
-		printf("count   = %i\n", count);
+		shell_print("inname  = %s\n", inname);
+		shell_print("outname = %s\n", outname);
+		shell_print("block   = %i\n", block);
+		shell_print("skip    = %i\n", skip);
+		shell_print("seek    = %i\n", seek);
+		shell_print("count   = %i\n", count);
 	}
 
 	//buff = (char *)mall c(block);
 	char buffer[block];
 
 	if (argc - optind != 1) {
-		printf("dd - incorrect number of arguments. Try 'man dd'\n");
+		shell_print("dd - incorrect number of arguments. Try 'man dd'\n");
 		err++; goto cleanup;
 	}
 
 	if (buffer == NULL) {
-		printf("dd: out of memory.\n");
+		shell_print("dd: out of memory.\n");
 		err++; goto cleanup;
 	}
 
@@ -90,20 +89,20 @@ cmd_dd_exec(char *argv[]) {
 		shell_clean_path(inname, infile);
 
 		if (fl_is_dir(infile)) {
-			printf("dd: '%s' is a directory\n", infile);
+			shell_print("dd: '%s' is a directory\n", infile);
 			err++; goto cleanup;
 		}
 
 		in = fl_fopen(infile, "r");
 
 		if (!in) {
-			printf("dd: could not open '%s' for reading\n", infile);
+			shell_print("dd: could not open '%s' for reading\n", infile);
 			err++; goto cleanup;
 		}
 
 		fl_fseek(in, skip * block, SEEK_SET);
 	} else {
-		printf("dd: no input file specified - dumping zeros\n");
+		shell_print("dd: no input file specified - dumping zeros\n");
 		memset(buffer, 0, block);
 	}
 
@@ -111,7 +110,7 @@ cmd_dd_exec(char *argv[]) {
 		shell_clean_path(outname, outfile);
 
 		if (fl_is_dir(outfile)) {
-			printf("dd: '%s' is a directory\n", outfile);
+			shell_print("dd: '%s' is a directory\n", outfile);
 			err++; goto cleanup;
 		}
 
@@ -119,17 +118,17 @@ cmd_dd_exec(char *argv[]) {
 
 		if (out) {
 			rc = fl_fseek(out, seek * block, SEEK_SET);
-			printf("WARNING: seeking in outfile beyond EOF is unsupported!\n");
+			shell_print("WARNING: seeking in outfile beyond EOF is unsupported!\n");
 		} else {
 			out = fl_fopen(outfile, "w");
 		}
 
 		if (!out) {
-			printf("dd: could not open '%s' for writeing\n", outfile);
+			shell_print("dd: could not open '%s' for writeing\n", outfile);
 			err++; goto cleanup;
 		}
 	} else {
-		printf("dd: no output file specified - using stdout\n");
+		shell_print("dd: no output file specified - using stdout\n");
 	}
 
 	if (count >= 0) {
@@ -141,13 +140,13 @@ cmd_dd_exec(char *argv[]) {
 	while (size > 0) {
 		int blk = count - size;
 
-		if (verbose) printf("dd:  reading block %i\n", blk);
+		if (verbose) shell_print("dd:  reading block %i\n", blk);
 
 		if (in) {
 			rc = fl_fread(buffer, block, 1, in);
 
 			if (rc < 0) {
-				printf("dd: Error reading block %i\n", blk);
+				shell_print("dd: Error reading block %i\n", blk);
 				err++; goto cleanup;
 			} else {
 				// short read -> set block size to number of bytes read
@@ -155,17 +154,17 @@ cmd_dd_exec(char *argv[]) {
 			}
 		}
 
-		if (verbose) printf("dd: writeing block %i\n", blk);
+		if (verbose) shell_print("dd: writeing block %i\n", blk);
 
 		if (out) {
 			rc = fl_fwrite(buffer, block, 1, out);
 
 			if (rc < 0) {
-				printf("dd: Error writeing block %i\n", blk);
+				shell_print("dd: Error writeing block %i\n", blk);
 				err++; goto cleanup;
 			}
 		} else {
-			printf("%s\n", buffer);
+			shell_print("%s\n", buffer);
 		}
 
 		size--;

@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "fat_filelib.h"
@@ -7,7 +6,7 @@
 
 void
 cmd_cd_help(void) {
-	printf("'cd' changes the current working directory.\n");
+	shell_print("'cd' changes the current working directory.\n");
 }
 
 int
@@ -16,13 +15,13 @@ cmd_cd_exec(char *argv[]) {
 	char path[PATH_MAX];
 
 	if (argc > 2) {
-		printf("Too many arguments to 'cd'\n");
+		shell_print("Too many arguments to 'cd'\n");
 
 		return (-1);
 	}
 
 	if (argc < 2) {
-		printf("No directory specified. Try 'man cd'\n");
+		shell_print("No directory specified. Try 'man cd'\n");
 
 		return (-1);
 	}
@@ -34,7 +33,7 @@ cmd_cd_exec(char *argv[]) {
 	}
 
 	if (!fl_is_dir(path)) {
-		printf("Invalid directory '%s'\n", path);
+		shell_print("Invalid directory '%s'\n", path);
 
 		return (-1);
 	}

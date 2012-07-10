@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "fat_filelib.h"
@@ -14,8 +13,8 @@ static struct option const long_options[] = {
 
 void
 cmd_mkdir_help(void) {
-	printf("'mkdir' creates a new directory.                        \n\n");
-	printf(
+	shell_print("'mkdir' creates a new directory.                        \n\n");
+	shell_print(
 		"Usage: mkdir [options] <path>                                 \n"
 		"Options:                                                      \n"
 		"  -p, --parents    Create needed parents for <path>           \n"
@@ -36,18 +35,18 @@ create_directory(char *path, int parents, int verbose) {
 		dirp = fl_opendir(dir, &dirstat);
 
 		if (dirp) {
-			printf("mkdir: cannot create directory '%s': File exists\n", dir);
+			shell_print("mkdir: cannot create directory '%s': File exists\n", dir);
 			fl_closedir(dirp);
 			return (-1);
 		}
 
 		if ((fl_createdirectory(dir) == -1)) {
-			printf("mkdir: could not create '%s', try '-p'\n", dir);
+			shell_print("mkdir: could not create '%s', try '-p'\n", dir);
 			return (-1);
 		}
 
 		if (verbose) {
-			printf("mkdir: created directory '%s'\n", dir);
+			shell_print("mkdir: created directory '%s'\n", dir);
 		}
 	} else {
 		dirs[i] = strtok_r(dir, "/", &save);
@@ -61,10 +60,10 @@ create_directory(char *path, int parents, int verbose) {
 			ptr += sprintf(ptr, "/%s", dirs[i]);
 
 			if (fl_createdirectory(buf)) {
-				printf("mkdir: could not create '%s'\n", buf);
+				shell_print("mkdir: could not create '%s'\n", buf);
 			} else {
 				if (verbose) {
-					printf("mkdir: created directory '%s'\n", buf);
+					shell_print("mkdir: created directory '%s'\n", buf);
 				}
 			}
 
@@ -91,7 +90,7 @@ cmd_mkdir_exec(char *argv[]) {
 	}
 
 	if (argc - optind < 2) {
-		printf("mkdir - incorrect number of arguments. Try 'man mkdir'\n");
+		shell_print("mkdir - incorrect number of arguments. Try 'man mkdir'\n");
 
 		return (-1);
 	}

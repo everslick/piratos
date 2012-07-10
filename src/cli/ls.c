@@ -1,14 +1,12 @@
-#include <stdio.h>
-
 #include "fat_filelib.h"
 
 #include "shell.h"
 
 void
 cmd_ls_help(void) {
-	printf("'ls' lists files and directories.                          \n");
-	printf("                                                           \n");
-	printf("If no path is given the current working directory is used. \n");
+	shell_print("'ls' lists files and directories.                          \n");
+	shell_print("                                                           \n");
+	shell_print("If no path is given the current working directory is used. \n");
 }
 
 void
@@ -20,9 +18,9 @@ list_directory(const char *path) {
 
         while (fl_readdir(&dirstat, &dirent) == 0) {
             if (dirent.is_dir) {
-                printf("%s \t<DIR>\n", dirent.filename);
+                shell_print("%s \t<DIR>\n", dirent.filename);
             } else {
-                printf("%s \t[%d bytes]\n", dirent.filename, (int)dirent.size);
+                shell_print("%s \t[%d bytes]\n", dirent.filename, (int)dirent.size);
             }
         }
 
@@ -36,7 +34,7 @@ cmd_ls_exec(char *argv[]) {
 	char path[PATH_MAX];
 
 	if (argc > 2) {
-		printf("Too many arguments to 'ls'\n");
+		shell_print("Too many arguments to 'ls'\n");
 
 		return (-1);
 	}
@@ -48,7 +46,7 @@ cmd_ls_exec(char *argv[]) {
 	}
 
 	if (!fl_is_dir(path)) {
-		printf("Invalid directory '%s'\n", argv[1]);
+		shell_print("Invalid directory '%s'\n", argv[1]);
 
 		return (-1);
 	}

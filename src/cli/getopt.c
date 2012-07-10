@@ -23,8 +23,8 @@
  *  DEALINGS IN THE SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 #include <string.h>
 
 #include "getopt.h"
@@ -125,9 +125,11 @@ getopt_internal(int argc, char * argv[], const char *shortopts,
       if (argv[optind][charind] == '=') {
         if (longopts[found].has_arg == 0) {
           opt = '?';
+#ifdef DEBUG_PRINT
           if (opterr) fprintf(stderr,
                              "%s: option `--%s' doesn't allow an argument\n",
                              argv[0], longopts[found].name);
+#endif
         } else {
           optarg = argv[optind] + ++charind;
           charind = 0;
@@ -135,9 +137,11 @@ getopt_internal(int argc, char * argv[], const char *shortopts,
       } else if (longopts[found].has_arg == 1) {
         if (++optind >= argc) {
           opt = (colon_mode == ':') ? ':' : '?';
+#ifdef DEBUG_PRINT
           if (opterr) fprintf(stderr,
                              "%s: option `--%s' requires an argument\n",
                              argv[0], longopts[found].name);
+#endif
         } else optarg = argv[optind];
       }
       if (!opt) {
@@ -150,15 +154,19 @@ getopt_internal(int argc, char * argv[], const char *shortopts,
       if (offset == 1) opt = getopt(argc, argv, shortopts);
       else {
         opt = '?';
+#ifdef DEBUG_PRINT
         if (opterr) fprintf(stderr,
                            "%s: unrecognized option `%s'\n",
                            argv[0], argv[optind++]);
+#endif
       }
     } else {
       opt = '?';
+#ifdef DEBUG_PRINT
       if (opterr) fprintf(stderr,
                          "%s: option `%s' is ambiguous\n",
                          argv[0], argv[optind++]);
+#endif
     }
   }
   if (optind > argc) optind = argc;
@@ -208,9 +216,11 @@ getopt(int argc, char * argv[], const char *opts) {
         } else if (*(++s) != ':') {
           charind = 0;
           if (++optind >= argc) {
+#ifdef DEBUG_PRINT
             if (opterr) fprintf(stderr,
                                 "%s: option requires an argument -- %c\n",
                                 argv[0], optopt);
+#endif
             opt = (colon_mode == ':') ? ':' : '?';
             goto getopt_ok;
           }
@@ -220,9 +230,11 @@ getopt(int argc, char * argv[], const char *opts) {
       opt = optopt;
       goto getopt_ok;
     }
+#ifdef DEBUG_PRINT
     if (opterr) fprintf(stderr,
                         "%s: illegal option -- %c\n",
                         argv[0], optopt);
+#endif
     opt = '?';
     if (argv[optind][++charind] == '\0') {
       optind++;

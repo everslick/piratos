@@ -1,10 +1,8 @@
-#include <stdio.h>
-
 #include "shell.h"
 
 void
 cmd_quit_help(void) {
-	printf("'quit' terminates the shell.\n");
+	shell_print("'quit' terminates the shell.\n");
 }
 
 int

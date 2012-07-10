@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "shell.h"
 
@@ -140,6 +141,18 @@ parse_args(char *buffer, char **args, int *nargs) {
 }
 
 int
+shell_print(const char *fmt, ...) {
+	va_list ap;
+	int n;
+
+	va_start(ap, fmt);
+	n = vprintf(fmt, ap);
+	va_end(ap);
+
+	return (n);
+}
+
+int
 shell_num_args(char **args) {
 	int i = 0;
 
@@ -237,7 +250,7 @@ shell_init(void){
 	shell_set_prompt("/");
 
 	while (!shell_quit) {
-		printf("%s", shell_prompt);
+		shell_print("%s", shell_prompt);
 
 		read_line(buffer, MAX_COMMAND_LINE);
 		parse_args(buffer, args, &nargs);
@@ -248,10 +261,10 @@ shell_init(void){
 		if (!strcmp(args[0], "man")) {
 			if (nargs == 2) {
 				if (cmd_help(args) != 0) {
-					printf("man: no manual for command '%s' available\n", args[1]);
+					shell_print("man: no manual for command '%s' available\n", args[1]);
 				}
 			} else {
-				printf("USAGE: man [command]\n");
+				shell_print("USAGE: man [command]\n");
 			}
 
 			continue;
@@ -259,7 +272,7 @@ shell_init(void){
 
 		if (cmd_exec(args) == 0) continue;
 
-		printf("%s: command not found\n", args[0]);
+		shell_print("%s: command not found\n", args[0]);
 /*
 		pid_t pid = fork();
 

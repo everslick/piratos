@@ -1,14 +1,12 @@
-#include <stdio.h>
-
 #include "fat_filelib.h"
 
 #include "shell.h"
 
 void
 cmd_touch_help(void) {
-	printf("'touch' creates emty files, if they don't exist. \n");
-	printf("                                                 \n");
-	printf("USAGE:  touch <file>                             \n");
+	shell_print("'touch' creates emty files, if they don't exist. \n");
+	shell_print("                                                 \n");
+	shell_print("USAGE:  touch <file>                             \n");
 }
 
 int
@@ -19,7 +17,7 @@ cmd_touch_exec(char *argv[]) {
 	FL_FILE *file;
 
 	if (argc == 1) {
-		printf("touch - incorrect number of arguments. Try 'man touch'\n");
+		shell_print("touch - incorrect number of arguments. Try 'man touch'\n");
 
 		return (-1);
 	}
@@ -28,7 +26,7 @@ cmd_touch_exec(char *argv[]) {
 		shell_clean_path(argv[1], path);
 
 		if (fl_is_dir(path)) {
-			printf("touch: '%s' is a directory\n", path);
+			shell_print("touch: '%s' is a directory\n", path);
 			err++; continue;
 		}
 
@@ -43,7 +41,7 @@ cmd_touch_exec(char *argv[]) {
 		if (file) {
 			fl_fclose(file);
 		} else {
-			printf("touch: Could not create '%s'\n", path);
+			shell_print("touch: Could not create '%s'\n", path);
 			err++; continue;
 		}
 	}

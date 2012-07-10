@@ -1,33 +1,31 @@
-#include <stdio.h>
-
 #include "shell.h"
 
 void
 cmd_help_help(void) {
-	printf("'help' lists all available shell commands.\n");
+	shell_print("'help' lists all available shell commands.\n");
 }
 
 int
 cmd_help_exec(char *argv[]) {
-	printf("available commands are:\n");
-	printf("-----------------------------------------------------------\n");
-	printf("     cat: print file content                               \n");
-	printf("      cd: change current directory                         \n");
-	printf("   clean: clean up the given path name                     \n");
-	printf("      cp: copy file                                        \n");
-	printf("      dd: copy a file, formatted according to the operands \n");
-	printf("    echo: print all arguments                              \n");
-	printf("      hd: hexdump a file to stdout                         \n");
-	printf("      ls: list (current working) directory                 \n");
-	printf("   mkdir: create directory                                 \n");
-	printf("      mv: move and rename files and directories            \n");
-	printf("     pwd: print (current) working directory                \n");
-	printf("      rm: delete (remove) file                             \n");
-	printf("     man: provide detailed help for command                \n");
-	printf("    help: list available commands                          \n");
-	printf("    info: OS name and version                              \n");
-	printf("    quit: terminate shell                                  \n");
-	printf("    halt: exit OS                                          \n");
+	shell_print("available commands are:\n");
+	shell_print("-----------------------------------------------------------\n");
+	shell_print("     cat: print file content                               \n");
+	shell_print("      cd: change current directory                         \n");
+	shell_print("   clean: clean up the given path name                     \n");
+	shell_print("      cp: copy file                                        \n");
+	shell_print("      dd: copy a file, formatted according to the operands \n");
+	shell_print("    echo: print all arguments                              \n");
+	shell_print("      hd: hexdump a file to stdout                         \n");
+	shell_print("      ls: list (current working) directory                 \n");
+	shell_print("   mkdir: create directory                                 \n");
+	shell_print("      mv: move and rename files and directories            \n");
+	shell_print("     pwd: print (current) working directory                \n");
+	shell_print("      rm: delete (remove) file                             \n");
+	shell_print("     man: provide detailed help for command                \n");
+	shell_print("    help: list available commands                          \n");
+	shell_print("    info: OS name and version                              \n");
+	shell_print("    quit: terminate shell                                  \n");
+	shell_print("    halt: exit OS                                          \n");
 
 	return (0);
 }

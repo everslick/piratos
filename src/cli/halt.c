@@ -1,11 +1,10 @@
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "shell.h"
 
 void
 cmd_halt_help(void) {
-	printf("'halt' terminates the OS.\n");
+	shell_print("'halt' terminates the OS.\n");
 }
 
 int

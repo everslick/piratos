@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 
 #include "fat_filelib.h"
@@ -45,7 +44,7 @@ rm_recursive(const char *path, int verbose) {
 				r2 = fl_remove(buf);
 
 				if (verbose) {
-					printf("rm: removing '%s'\n", buf);
+					shell_print("rm: removing '%s'\n", buf);
 				}
 			}
 
@@ -59,7 +58,7 @@ rm_recursive(const char *path, int verbose) {
 		r = fl_remove(path);
 
 		if (verbose) {
-			printf("rm: removing '%s'\n", path);
+			shell_print("rm: removing '%s'\n", path);
 		}
 	}
 
@@ -69,13 +68,13 @@ rm_recursive(const char *path, int verbose) {
 static int
 rm_single(const char *path, int verbose) {
 	if (fl_remove(path)) {
-		printf( "rm: could not remove file '%s'\n", path);
+		shell_print( "rm: could not remove file '%s'\n", path);
 
 		return (1);
 	}
 
 	if (verbose) {
-		printf("rm: removing '%s'\n", path);
+		shell_print("rm: removing '%s'\n", path);
 	}
 
 	return (0);
@@ -92,12 +91,12 @@ rm_scope(const char *path) {
 
 void
 cmd_rm_help(void) {
-	printf("'rm' removes files and directories.                           \n");
-	printf("                                                              \n");
-	printf("Usage:  rm [options] <path>                                   \n");
-	printf("Options:                                                      \n");
-	printf("  -r, --recursive  Recursively remove sub directories         \n");
-	printf("  -v, --verbose    Be extremely noisy about what is happening \n");
+	shell_print("'rm' removes files and directories.                           \n");
+	shell_print("                                                              \n");
+	shell_print("Usage:  rm [options] <path>                                   \n");
+	shell_print("Options:                                                      \n");
+	shell_print("  -r, --recursive  Recursively remove sub directories         \n");
+	shell_print("  -v, --verbose    Be extremely noisy about what is happening \n");
 }
 
 int
@@ -117,7 +116,7 @@ cmd_rm_exec(char *argv[]) {
 	}
 
 	if (argc - optind < 2) {
-		printf("rm: insufficient number of arguments. Try 'man rm'\n");
+		shell_print("rm: insufficient number of arguments. Try 'man rm'\n");
 
 		return (-1);
 	}
@@ -134,7 +133,7 @@ cmd_rm_exec(char *argv[]) {
 
 			case RM_DIR:
 				if (!recursive) {
-					printf("%s is a directory, use -r to remove it.\n", path);
+					shell_print("%s is a directory, use -r to remove it.\n", path);
 					ret++;
 				} else {
 					ret += rm_recursive(path, verbose);

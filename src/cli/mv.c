@@ -1,10 +1,8 @@
-#include <stdio.h>
-
 #include "shell.h"
 
 void
 cmd_mv_help(unsigned int level) {
-	printf("'mv' renames files\n");
+	shell_print("'mv' renames files\n");
 }
 
 int
@@ -13,7 +11,7 @@ cmd_mv_exec(char *argv[]) {
 	int argc = shell_num_args(argv);
 
 	if (argc != 3) {
-		printf("mv: invalid number of arguments.\n");
+		shell_print("mv: invalid number of arguments.\n");
 
 		return (-1);
 	}
@@ -21,8 +19,8 @@ cmd_mv_exec(char *argv[]) {
 	shell_clean_path(argv[1], from);
 	shell_clean_path(argv[2], to);
 
-	if (rename(from, to)) {
-		printf("Unable to rename %s to %s\n", from, to);
+	if (1/*rename(from, to)*/) {
+		shell_print("Unable to rename %s to %s\n", from, to);
 
 		return (-1);
 	}

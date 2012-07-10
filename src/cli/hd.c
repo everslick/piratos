@@ -1,14 +1,12 @@
-#include <stdio.h>
-
 #include "fat_filelib.h"
 
 #include "shell.h"
 
 void
 cmd_hd_help(void) {
-	printf("'hd' hexdump the given file to stdout.             \n");
-	printf("                                                   \n");
-	printf("USAGE:  hd <file>                                  \n");
+	shell_print("'hd' hexdump the given file to stdout.             \n");
+	shell_print("                                                   \n");
+	shell_print("USAGE:  hd <file>                                  \n");
 }
 
 int
@@ -19,7 +17,7 @@ cmd_hd_exec(char *argv[]) {
 	FL_FILE *file;
 
 	if (argc != 2) {
-		printf("hd - incorrect number of arguments. Try 'man hd'\n");
+		shell_print("hd - incorrect number of arguments. Try 'man hd'\n");
 
 		return (-1);
 	}
@@ -27,7 +25,7 @@ cmd_hd_exec(char *argv[]) {
 	shell_clean_path(argv[1], path);
 
 	if (fl_is_dir(path)) {
-		printf("hd: '%s' is a directory\n", path);
+		shell_print("hd: '%s' is a directory\n", path);
 
 		return (-1);
 	}
@@ -35,7 +33,7 @@ cmd_hd_exec(char *argv[]) {
 	file = fl_fopen(path, "r");
 
 	if (!file) {
-		printf("hd: Could not open '%s'\n", path);
+		shell_print("hd: Could not open '%s'\n", path);
 
 		return (-1);
 	}
@@ -43,27 +41,27 @@ cmd_hd_exec(char *argv[]) {
 	while (rc != EOF) {
 		rc = fl_fread(buffer, 16, 1, file);
 
-		printf("%04hhx:%04hhx  ", line * 16, line * 16 + rc -1);
+		shell_print("%04hhx:%04hhx  ", line * 16, line * 16 + rc -1);
 
 		for (i=0; i<rc; i++) {
-			printf("%02hhx ", buffer[i]);
-			if (i == 7) printf(" ");
+			shell_print("%02hhx ", buffer[i]);
+			if (i == 7) shell_print(" ");
 		}
 
 		for (i=rc; i<16; i++) {
-			printf("   ");
-			if (i == 7) printf(" ");
+			shell_print("   ");
+			if (i == 7) shell_print(" ");
 		}
 
-		printf(" |");
+		shell_print(" |");
 		for (i=0; i<rc; i++) {
 			if ((buffer[i] < 32) || (buffer[i] > 127)) {
-				printf(".");
+				shell_print(".");
 			} else {
-				printf("%c", buffer[i]);
+				shell_print("%c", buffer[i]);
 			}
 		}
-		printf("|\n");
+		shell_print("|\n");
 
 		if (rc < 16) break;
 

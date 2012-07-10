@@ -1,10 +1,8 @@
-#include <stdio.h>
-
 #include "shell.h"
 
 void
 cmd_echo_help(void) {
-	printf("'echo' prints all arguments.\n");
+	shell_print("'echo' prints all arguments.\n");
 }
 
 int
@@ -12,16 +10,16 @@ cmd_echo_exec(char *argv[]) {
 	int i, argc = shell_num_args(argv);
 
 	if (argc < 2) {
-		printf("\n");
+		shell_print("\n");
 
 		return (0);
 	}
 
-	printf("%d arguments passed to 'echo'", argc - 1);
+	shell_print("%d arguments passed to 'echo'", argc - 1);
 
-	printf(":\n");
+	shell_print(":\n");
 
-	for (i = 1; i < argc; i++) printf("[%d] -> %s\n", i, argv[i]);
+	for (i = 1; i < argc; i++) shell_print("[%d] -> %s\n", i, argv[i]);
 
 	return (0);
 }

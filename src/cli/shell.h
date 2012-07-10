@@ -10,6 +10,7 @@ extern char shell_owd[];
 extern int  shell_error;
 extern int  shell_quit;
 
+int  shell_print(const char *fmt, ...);
 int  shell_num_args(char **args);
 void shell_clean_path(char *path, char *cleaned);
 void shell_set_cwd(char *cwd);

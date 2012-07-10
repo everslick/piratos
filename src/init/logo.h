@@ -5,7 +5,7 @@ typedef struct PiratosLogo {
   unsigned int  width;
   unsigned int  height;
   unsigned int  bytes_per_pixel; /* 3:RGB, 4:RGBA */ 
-  unsigned char pixel_data[959 * 193 * 4 + 1];
+  unsigned char pixel_data[800 * 160 * 4 + 1];
 } PiratosLogo;
 
 extern PiratosLogo piratos_logo;

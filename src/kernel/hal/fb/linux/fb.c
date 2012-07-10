@@ -9,6 +9,7 @@ typedef struct ModeDescriptor {
 } ModeDescriptor;
 
 static ModeDescriptor fb_modes[] = {
+	{ 1920, 1200, "WUXGA"        },
 	{  640,  350, "EGA"          },
 	{  640,  480, "VGA"          },
 	{  800,  600, "SVGA"         },
@@ -87,7 +88,7 @@ bits_per_pixel(FB_Format format) {
 
 int
 fb_init(void) {
-	SDL_Init(SDL_INIT_VIDEO);
+	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE);
 
 	return (0);
 }
@@ -103,12 +104,13 @@ fb_fini(void) {
 
 int
 fb_mode(FB_Mode mode, FB_Format format) {
-	int bpp = bits_per_pixel(format);
+	int w = fb_modes[mode].width;
+	int h = fb_modes[mode].height;
 
-	screen = SDL_SetVideoMode(fb_modes[mode].width, fb_modes[mode].height, bpp, SDL_SWSURFACE);
+	screen = SDL_SetVideoMode(w, h, 0, SDL_SWSURFACE | SDL_ANYFORMAT);
 
 	fb_pixel_format   = format;
-	fb_bits_per_pixel = bpp;
+	fb_bits_per_pixel = bits_per_pixel(format);
 
 	return (0);
 }

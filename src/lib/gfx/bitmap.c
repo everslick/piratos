@@ -2,6 +2,7 @@
 
 FB_Surface *
 gfx_bitmap_load(GFX_Bitmap *bitmap) {
+	int bpp = bitmap->bytes_per_pixel;
 	FB_Surface *sfc;
 	FB_Color c;
 
@@ -9,12 +10,24 @@ gfx_bitmap_load(GFX_Bitmap *bitmap) {
 
 	for (int y=0; y<sfc->height; y++) {
 		for (int x=0; x<sfc->width; x++) {
-			int idx = y * sfc->width * 4 + x * 4;
+			int idx = y * sfc->width * bpp + x * bpp;
+			c.a = 0xff;
 
-			c.r = bitmap->pixel_data[idx + 0];
-			c.g = bitmap->pixel_data[idx + 1];
-			c.b = bitmap->pixel_data[idx + 2];
-			c.a = bitmap->pixel_data[idx + 3];
+			switch (bpp) {
+				case 4:
+					c.a = bitmap->pixel_data[idx + 3];
+				// fall through!
+
+				case 3:
+					c.b = bitmap->pixel_data[idx + 2];
+					c.g = bitmap->pixel_data[idx + 1];
+					c.r = bitmap->pixel_data[idx + 0];
+				break;
+
+				case 1:
+					c.r = c.g = c.b = bitmap->pixel_data[idx];
+				break;
+			}
 
 			fb_set_pixel(sfc, x, y, &c);
 		}

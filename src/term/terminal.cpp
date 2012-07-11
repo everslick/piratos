@@ -13,37 +13,36 @@
 
 using namespace std;
 
-Terminal::Terminal(FB_Surface *f[]) {
+Terminal::Terminal(GFX_Bitmap *bitmap) {
 	program_to_start = (char *)"/bin/bash";
 	virtual_terminals = 8;
 	FB_Rectangle r;
 
-	font = f;
-
-	surface = NULL;
-	shell   = NULL;
-
-	width = 80;
+	width  = 80;
 	height = 32;
 
-	cw = font[0]->width / 95;
-	ch = font[0]->height;
+	// create 8 fonts for 8 ansi colors
+	DrawFont(bitmap, font);
+
+	// fonts MUST have been loaded before!
+	cw = (*font)->width / 95;
+	ch = (*font)->height;
 
 	geometry.x = 10;
 	geometry.y = 10;
 	geometry.w = cw * width;
 	geometry.h = ch * height;
 
+	// create window surface
+	surface = fb_create_surface(geometry.w, geometry.h, FB_FORMAT_BEST);
+
 	r.x = geometry.x - 2;
-	r.y = geometry.x - 2;
+	r.y = geometry.y - 2;
 	r.w = geometry.w + 4;
 	r.h = geometry.h + 4;
 
-	// create widget surface
-	surface = fb_create_surface(geometry.w, geometry.h, FB_FORMAT_BEST);
-
 	// draw white frame
-	FB_Color bg = { 0xff, 0xff, 0xff, 0xff  };
+	FB_Color bg = { 0x80, 0xff, 0x80, 0xff  };
 	fb_fill(NULL, &r, &bg);
 
 	for (int i=0; i<virtual_terminals; i++) {
@@ -106,7 +105,6 @@ Terminal::DetermineColor(VT102::CanvasChar &c, int &fg, int &bg) {
 	//  hide concealed cells
 	if (c.concealed) color[FG] = color[BG];
 
-	// now really set the color structs
 	fg = color[FG];
 	bg = color[BG];
 }
@@ -146,11 +144,11 @@ Terminal::Repaint(void) {
 			DetermineColor(cell, fg, bg);
 
 			// print char
-			DrawGlyph(surface, x*cw, y*ch, cell.ch, font, fg, bg);
+			DrawGlyph(surface, font, x*cw, y*ch, cell.ch, fg, bg);
 
 			// double bold characters
 			if (cell.bold) {
-				DrawGlyph(surface, x*cw+1, y*ch, cell.ch, font, fg, -1);
+				DrawGlyph(surface, font, x*cw+1, y*ch, cell.ch, fg, -1);
 			}
 
 			// draw underlined
@@ -163,26 +161,23 @@ Terminal::Repaint(void) {
 
 	// draw cursor
 	if (vt102.CursorVisible()) {
-		int cx = vt102.CursorX(), cy = vt102.CursorY();
+		int x = vt102.CursorX(), y = vt102.CursorY();
 
-		if (cy < height) { 
+		if (y < height) {
 			// the cursor can't get out of the screen
-			if (cx >= width) cx = width - 1;
+			if (x >= width) x = width - 1;
 
-			VT102::CanvasChar& cell =
-				(VT102::CanvasChar &)vt102.Canvas()[cy][cx];
+			VT102::CanvasChar &cell =
+				(VT102::CanvasChar &)vt102.Canvas()[y][x];
 
 			DetermineColor(cell, fg, bg);
 
 			// use inverse colors
-			DrawGlyph(surface, cx*cw, cy*ch, cell.ch, font, bg, fg);
+			DrawGlyph(surface, font, x*cw, y*ch, cell.ch, bg, fg);
 		}
 	}
 
-	// draw frame
-	//FB_Color wht = { 0xff, 0xff, 0xff, 0xff };
-	//DrawOutline(surface, NULL, &wht);
-
+	// blit window to screen
 	fb_blit(surface, NULL, NULL, &geometry, NULL);
 	fb_flip(&geometry);
 
@@ -230,7 +225,7 @@ Terminal::KeyEvent(int key, int code, int modifier, int state) {
 
 	if (state != KBD_EVENT_STATE_PRESSED) return (true);
 
-	if (modifier == KBD_MOD_LALT) {
+	if (modifier & KBD_MOD_LALT) {
 		switch (key) {
 			case KBD_KEY_LEFT:  SwitchShell(current_shell - 1); break;
 			case KBD_KEY_RIGHT: SwitchShell(current_shell + 1); break;

@@ -5,12 +5,12 @@
 #include <kernel/hal/kbd/kbd.h>     // keyboard
 #include <kernel/hal/fb/fb.h>       // framebuffer
 
-#include <lib/gfx/bitmap.h>
+//#include <lib/gfx/bitmap.h>
+#include <lib/gfx/glyph.h>
 
 #include "terminal.h"
 
-FB_Surface *logo = NULL;
-FB_Surface *font[8]; // 8 ansi colors
+static const char *str = "pir{A}tos version " VERSION " (" PLATFORM ")";
 
 extern GFX_Bitmap piratos_logo;
 extern GFX_Bitmap piratos_font;
@@ -22,13 +22,16 @@ void piratos(void);
 void
 piratos(void) {
 	FB_Color bg = { 0x20, 0x10, 0x60, 0xff };
+	FB_Color fg = { 0xc0, 0x60, 0x10, 0xff };
 	Terminal *terminal = NULL;
+	FB_Surface *logo = NULL;
+	FB_Surface *font = NULL;
 	FB_Rectangle dst, upd;
 	MOUSE_Event mouse_ev;
 	KBD_Event kbd_ev;
 	int dir, pos;
 
-	printf("Terminal Version " VERSION " (" PLATFORM ")\n");
+	printf("%s\n", str);
 
 	fb_init();
 	fb_mode(FB_MODE_1280x768, FB_FORMAT_BEST);
@@ -36,10 +39,9 @@ piratos(void) {
 	fb_flip(NULL);
 
 	logo = gfx_bitmap_load(&piratos_logo);
+	font = gfx_glyph_load(&piratos_font, &fg);
 
-	for (int i=0; i<sizeof(font); i++) {
-		font[i] = gfx_bitmap_load(&piratos_font);
-	}
+	gfx_glyph_string(NULL, font, 10, 540, str);
 
 	pos = (1280 - logo->width) / 2;
 	dst.y = 768 - logo->height;
@@ -50,7 +52,7 @@ piratos(void) {
 	kbd_init();
 	mouse_init();
 
-	terminal = new Terminal(font);
+	terminal = new Terminal(&piratos_font);
 
 	while (1) {
 		dst.x = pos;

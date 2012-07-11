@@ -15,7 +15,7 @@ class Terminal {
 
 public:
 
-	Terminal(FB_Surface *f[]);
+	Terminal(GFX_Bitmap *bitmap);
 	~Terminal(void);
 
 	bool Update(void);
@@ -26,7 +26,7 @@ private:
 
 	FB_Rectangle geometry;
 	FB_Surface *surface;
-	FB_Surface **font;
+	FB_Surface *font[8];
 
 	Shell *CreateShell(int nr = -1);
 	void SwitchShell(int nr);

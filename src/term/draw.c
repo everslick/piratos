@@ -1,3 +1,4 @@
+#include <lib/gfx/glyph.h>
 #include <lib/gfx/line.h>
 
 #include "draw.h"
@@ -174,7 +175,9 @@ static const short *lines[] = {
 
 static FB_Color *
 AnsiColor(int ansi) {
-	static FB_Color color = { 0xFF, 0xFF, 0xFF, 0xFF }; // white
+	static FB_Color color;
+
+	color.r = color.g = color.b = color.a = 0xFF; // white
 
 	switch (ansi) {
 		case 0: SetColor(color, 0x00, 0x00, 0x00); break; // black
@@ -190,42 +193,52 @@ AnsiColor(int ansi) {
 }
 
 void
+DrawFont(GFX_Bitmap *bitmap, FB_Surface *font[8]) {
+	for (int c=0; c<8; c++) {
+		font[c] = gfx_glyph_load(bitmap, AnsiColor(c));
+	}
+}
+
+void
 DrawLine(FB_Surface *sfc, int x1, int y1, int x2, int y2, int c) {
 	gfx_line_draw(sfc, x1, y1, x2, y2, AnsiColor(c));
 }
 
 void
 DrawGlyph(FB_Surface *sfc,
+			 FB_Surface *font[],
 			 int x, int y,
 			 unsigned char c,
-			 FB_Surface *font[],
 			 int fg, int bg) {
 
-	int w = font[0]->width / 95, h = font[0]->height;
+	int w = (*font)->width / 95, h = (*font)->height;
 	FB_Rectangle d = { x, y, w, h };
 	FB_Rectangle s = { x, 0, w, h };
-	const short *p;
 
 	if (bg != -1) fb_fill(sfc, &d, AnsiColor(bg));
 
-	if (c >= 32) {
+	if (c > 32) {
 		s.x = (c - 32) * w;
 		fb_blit(font[fg], &s, sfc, &d, 0);
-	} else {
-		if (c < (int)(sizeof (lines) / sizeof (lines[0])) && (p=lines[c])!=0) {
-			int coord[4], n = 0;
 
-			while (*p >= 0) {
-				coord[n++] = *p++;
+		return;
+	}
 
-				if (n == 4) {
-					SCALE_X(coord[0], w); SCALE_Y(coord[1], h);
-					SCALE_X(coord[2], w); SCALE_Y(coord[3], h);
+	const short *p;
 
-					DrawLine(sfc, x + coord[0], y + coord[1],
-					              x + coord[2], y + coord[3], fg);
-					n = 0;
-				}
+	if (c < (int)(sizeof (lines) / sizeof (lines[0])) && (p=lines[c])!=0) {
+		int coord[4], n = 0;
+
+		while (*p >= 0) {
+			coord[n++] = *p++;
+
+			if (n == 4) {
+				SCALE_X(coord[0], w); SCALE_Y(coord[1], h);
+				SCALE_X(coord[2], w); SCALE_Y(coord[3], h);
+
+				DrawLine(sfc, x + coord[0], y + coord[1],
+				              x + coord[2], y + coord[3], fg);
+				n = 0;
 			}
 		}
 	}

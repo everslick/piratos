@@ -1,16 +1,18 @@
 #include <stdio.h>
 
 /* Scheduler include files. */
-#include "FreeRTOS.h"
-#include "task.h"
+#include <kernel/os/FreeRTOS.h>
+#include <kernel/os/task.h>
 
-#include "mouse.h" // mouse
-#include "kbd.h"   // keyboard
-#include "fb.h"    // framebuffer
-#include "fs.h"    // filesystem
+#include <kernel/hal/mouse/mouse.h> // mouse
+#include <kernel/hal/kbd/kbd.h>     // keyboard
+#include <kernel/hal/fb/fb.h>       // framebuffer
 
-#include "shell.h"
-#include "logo.h"
+#include <fs/fs.h>                  // filesystem
+
+#include <lib/gfx/bitmap.h>
+
+extern GFX_Bitmap piratos_logo;
 
 static void
 AnimationTask(void *parameters) {
@@ -19,25 +21,10 @@ AnimationTask(void *parameters) {
 	FB_Rectangle upd;
 	int dir, pos;
 
-	fb_init();
-	fb_mode(FB_MODE_1280x768, FB_FORMAT_BEST);
 	fb_fill(NULL, NULL, &bg);
 	fb_flip(NULL);
 
-	logo = fb_create_surface(piratos_logo.width, piratos_logo.height, FB_FORMAT_BEST);
-
-	for (int y=0; y<logo->height; y++) {
-		for (int x=0; x<logo->width; x++) {
-			int idx = y * logo->width * 4 + x * 4;
-
-			c.r = piratos_logo.pixel_data[idx + 0];
-			c.g = piratos_logo.pixel_data[idx + 1];
-			c.b = piratos_logo.pixel_data[idx + 2];
-			c.a = piratos_logo.pixel_data[idx + 3];
-
-			fb_set_pixel(logo, x, y, &c);
-		}
-	}
+	logo = gfx_bitmap_load(&piratos_logo);
 
 	pos = (1280 - piratos_logo.width) / 2;
 	upd.y = 768 - piratos_logo.height;
@@ -50,7 +37,7 @@ AnimationTask(void *parameters) {
 		pos += dir;
 
 		fb_fill(NULL, &upd, &bg);
-		fb_blit(logo, NULL, upd.x, upd.y, NULL);
+		fb_blit(logo, NULL, NULL, &upd, NULL);
 		fb_flip(&upd);
 
 		vTaskDelay(40); // ~25fps
@@ -84,7 +71,7 @@ EventTask(void *parameters) {
 static void
 ShellTask(void *parameters) {
 	fs_init();
-	shell_init();
+	//shell_init();
 }
 
 void
@@ -92,6 +79,9 @@ piratos(void) {
 	portTickType rate = 500;
 
 	printf("pir{A}tos Version " VERSION " (" PLATFORM ")\n");
+
+	fb_init();
+	fb_mode(FB_MODE_1280x768, FB_FORMAT_BEST);
 
 	xTaskCreate(AnimationTask, "LOGOx",  configMINIMAL_STACK_SIZE, NULL, 7, NULL);
 	xTaskCreate(EventTask,     "EVENTx", configMINIMAL_STACK_SIZE, NULL, 8, NULL);

@@ -1,6 +1,10 @@
 #ifndef _MOUSE_H_
 #define _MOUSE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
 	int type;
 	int state;
@@ -24,5 +28,9 @@ int mouse_init(void);
 int mouse_fini(void);
 
 int mouse_poll(MOUSE_Event *ev);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _MOUSE_H_

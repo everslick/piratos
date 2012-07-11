@@ -6,6 +6,9 @@ int
 kbd_init(void) {
 	SDL_Init(SDL_INIT_VIDEO);
 
+	SDL_EnableUNICODE(1);
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+
 	return (0);
 }
 
@@ -23,6 +26,7 @@ kbd_poll(KBD_Event *ev) {
 		ev->type     = KBD_EVENT_TYPE_NONE;
 		ev->state    = KBD_EVENT_STATE_NONE;
 		ev->symbol   = 0;
+		ev->unicode  = 0;
 		ev->modifier = 0;
 	}
 
@@ -38,6 +42,7 @@ kbd_poll(KBD_Event *ev) {
 			if (sdl_ev.key.state == SDL_RELEASED) ev->state = KBD_EVENT_STATE_RELEASED;
 
 			ev->symbol   = sdl_ev.key.keysym.sym;
+			ev->unicode  = sdl_ev.key.keysym.unicode;
 			ev->modifier = sdl_ev.key.keysym.mod;
 
 			ret = (ev->state != KBD_EVENT_TYPE_NONE);

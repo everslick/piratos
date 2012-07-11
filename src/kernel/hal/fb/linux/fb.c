@@ -116,26 +116,32 @@ fb_mode(FB_Mode mode, FB_Format format) {
 }
 
 void
-fb_blit(FB_Surface *src, FB_Rectangle *rect, int x, int y, FB_Rectangle *clip) {
-	SDL_Rect sdl_rect, sdl_clip, sdl_dest;
-	SDL_Rect *r = NULL, *d = NULL;
+fb_blit(FB_Surface *ss, FB_Rectangle *sr, FB_Surface *ds, FB_Rectangle *dr, FB_Rectangle *ud) {
+	SDL_Surface *sdl_ss = screen;
+	SDL_Surface *sdl_ds = screen;
+	SDL_Rect sdl_sr, sdl_dr;
 
-	if (rect) {
-		FB2SDL_Rectangle(rect, &sdl_rect);
-		r = &sdl_rect;
+	if (ss) sdl_ss = ss->user;
+	if (ds) sdl_ds = ds->user;
+
+	if (sr) {
+		FB2SDL_Rectangle(sr, &sdl_sr);
+	} else {
+		sdl_sr.x = 0; sdl_sr.w = sdl_ss->w;
+		sdl_sr.y = 0; sdl_sr.h = sdl_ss->h;
 	}
 
-	if (clip) {
-		FB2SDL_Rectangle(clip, &sdl_clip);
-		SDL_SetClipRect(screen, &sdl_clip);
+	if (dr) {
+		FB2SDL_Rectangle(dr, &sdl_dr);
+	} else {
+		sdl_dr.x = 0; sdl_dr.w = sdl_ds->w;
+		sdl_dr.y = 0; sdl_dr.h = sdl_ds->h;
 	}
 
-	sdl_dest.x = x;
-	sdl_dest.y = y;
+	//SDL_SetClipRect(sdl_ds, &sdl_dr);
+	SDL_BlitSurface(sdl_ss, &sdl_sr, sdl_ds, &sdl_dr);
 
-	SDL_BlitSurface(src->user, r,  screen, &sdl_dest);
-
-	SDL2FB_Rectangle(&sdl_dest, clip);
+	SDL2FB_Rectangle(&sdl_dr, ud);
 }
 
 void
@@ -180,7 +186,7 @@ fb_release_surface(FB_Surface *surface) {
 void
 fb_fill(FB_Surface *surface, FB_Rectangle *rect, FB_Color *color) {
 	SDL_Rect *r = NULL, sdl_rect;
-	SDL_Surface *dst;
+	SDL_Surface *dst = screen;
 	unsigned int c;
 
 	if (rect) {
@@ -190,8 +196,6 @@ fb_fill(FB_Surface *surface, FB_Rectangle *rect, FB_Color *color) {
 
 	if (surface) {
 		dst = surface->user;
-	} else {
-		dst = screen;
 	}
 
 	c = SDL_MapRGBA(dst->format, color->r, color->g, color->b, color->a);
@@ -201,14 +205,12 @@ fb_fill(FB_Surface *surface, FB_Rectangle *rect, FB_Color *color) {
 
 void
 fb_set_pixel(FB_Surface *surface, int x, int y, FB_Color *color) {
+	SDL_Surface *dst = screen;
 	unsigned int pixel;
-	SDL_Surface *dst;
 	int bpp;
 
 	if (surface) {
 		dst = surface->user;
-	} else {
-		dst = screen;
 	}
 
 	bpp = dst->format->BytesPerPixel; 
@@ -247,3 +249,4 @@ fb_set_pixel(FB_Surface *surface, int x, int y, FB_Color *color) {
 void
 fb_get_pixel(FB_Surface *surface, int x, int y, FB_Color *color) {
 }
+

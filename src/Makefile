@@ -7,6 +7,9 @@ IMAGE     = ../bin/$(PROGRAM).img
 MAP       = ../bin/$(PROGRAM).map
 LD_SCR    = kernel/boot/pi/linker.ld
 
+CC        = gcc
+CPP       = g++
+
 ifeq ($(MAKECMDGOALS),pi)
 
 PLATFORM  = pi
@@ -43,7 +46,12 @@ AFLAGS   += -g
 
 endif
 
-MODULES  += init                         \
+CFLAGS   += -D__$(PLATFORM)__            \
+            -DPLATFORM=\"$(PLATFORM)\"   \
+            -DVERSION=\"$(VERSION)\"
+
+MODULES  := .                            \
+            init                         \
             kernel/os                    \
             kernel/os/$(PLATFORM)        \
             kernel/boot                  \
@@ -56,17 +64,20 @@ MODULES  += init                         \
             kernel/hal/kbd/$(PLATFORM)   \
             kernel/hal/mouse             \
             kernel/hal/mouse/$(PLATFORM) \
+            lib/gfx                      \
+            term                         \
             cli                          \
             fs                           \
-				fs/fat
+            fs/fat
 
-CFLAGS   += -std=gnu99                 \
-            -D__$(PLATFORM)__          \
-            -DPLATFORM=\"$(PLATFORM)\" \
-            -DVERSION=\"$(VERSION)\"
+CPPFLAGS := $(CFLAGS)
+
+CFLAGS   += -std=gnu99
 
 SRC_DIR  := $(addprefix ,$(MODULES))
 
+CPPSRC   := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.cpp))
+CPPOBJ   := $(CPPSRC:.cpp=.o)
 ASRC     := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.s))
 AOBJ     := $(ASRC:.s=.o)
 CSRC     := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c))
@@ -74,13 +85,13 @@ COBJ     := $(CSRC:.c=.o)
 
 INCLUDES := $(addprefix -I,$(SRC_DIR))
 
-vpath %.c $(SRC_DIR)
-vpath %.s $(SRC_DIR)
+#vpath %.c $(SRC_DIR)
+#vpath %.s $(SRC_DIR)
 
-OBJ = $(AOBJ) $(COBJ)
+OBJ = $(AOBJ) $(COBJ) $(CPPOBJ)
 
 linux: $(OBJ)
-	$(CC) $(OBJ) $(LFLAGS) -o $(TARGET)
+	$(CPP) $(OBJ) $(LFLAGS) -o $(TARGET)
 
 pi: $(OBJ)
 	$(LD) $(LFLAGS) -T $(LD_SCR) $(OBJ) -Map $(MAP) -o $(KERNEL)
@@ -89,6 +100,9 @@ pi: $(OBJ)
 clean:
 	rm -f $(TARGET) $(KERNEL) $(IMAGE) $(MAP) $(OBJ)
 	find . -name *.o -exec rm -rf {} \;
+
+%.o: %.cpp
+	$(CPP) $(INCLUDES) $(CPPFLAGS) -c -o $*.o $<
 
 %.o: %.c
 	$(CC) $(INCLUDES) $(CFLAGS) -c -o $*.o $<

@@ -1,6 +1,10 @@
 #ifndef _FB_H_
 #define _FB_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
 	FB_MODE_BEST,
 	FB_MODE_640x350,
@@ -52,7 +56,7 @@ int fb_fini(void);
 
 int fb_mode(FB_Mode mode, FB_Format format);
 
-void fb_blit(FB_Surface *src, FB_Rectangle *rect, int x, int y, FB_Rectangle *clip);
+void fb_blit(FB_Surface *ss, FB_Rectangle *sr, FB_Surface *ds, FB_Rectangle *dr, FB_Rectangle *ud);
 
 void fb_flip(FB_Rectangle *rect);
 
@@ -63,5 +67,9 @@ void fb_fill(FB_Surface *surface, FB_Rectangle *rect, FB_Color *color);
 
 void fb_set_pixel(FB_Surface *surface, int x, int y, FB_Color *color);
 void fb_get_pixel(FB_Surface *surface, int x, int y, FB_Color *color);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _fb_H_

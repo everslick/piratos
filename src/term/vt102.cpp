@@ -1,8 +1,10 @@
+/*
+ * ported from VDR console plugin (C) Jan Rieger <jan@ricomp.de>
+ * by Clemens Kirchgatterer <clemens@1541.org>
+ *
+ */
+
 #include <stdio.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <stropts.h>
 #include <stdlib.h>
 
 #include "vt102.h"
@@ -22,10 +24,7 @@ VT102::VT102(void) {
 
 	saved_cursor_pos = NULL;
 
-	scroll_region_top = 0;
-	// TODO
-	scroll_region_bottom = 23;// MUST BE (height - 1) !!!
-
+	// escape sequence parser state machine
 	state = STATE_NORMAL;
 
 	changed = false;
@@ -41,7 +40,6 @@ VT102::VT102(void) {
 
 	// initialize tabulators
 	int tab = 0;
-
 	for (int i=0; i<CONSOLE_MAXCOLS; i++) {
 		tabs[i] = tab += 8;
 	}
@@ -49,6 +47,7 @@ VT102::VT102(void) {
 	// No idea if this is the right size but it is
 	// a good value to start.
 	SetSize(80, 24);
+	SetScrollRegion(0, 24);
 
 	SelectCharSet(0, 'B');
 }
@@ -83,7 +82,7 @@ VT102::DebugOut(const char *fmt, ...) {
 
 void
 VT102::SelectCharSet(int g, char set) {
-	//	fDebugOut(stderr, "New CharSet selected: %i, %c\n", g, set);
+	//DebugOut("New CharSet selected: %i, %c\n", g, set);
 
 	// First reset all chars
 	for (int i=0; i<=255; i++) char_set[i] = i;
@@ -176,15 +175,14 @@ VT102::SetSize(int w, int h) {
 	// if nothing is to do then exit
 	if (w == width && h == height) return (false);
 
-	// if the width is the same as before when we don't need to
+	// if the width is the same as before then we don't need to
 	// realloc rows that exist already and should exist afterwards. 
 	int RowsNoChangeNeeded = min(h, height);
 
 	if (w != width) {
 		for (int row=0; row<RowsNoChangeNeeded; row++) {
 			CanvasChar* &cvs_row = canvas[row];
-			cvs_row =
-				(CanvasChar *)realloc((void *)cvs_row, w * sizeof (CanvasChar));
+			cvs_row = (CanvasChar *)realloc((void *)cvs_row, w * sizeof (CanvasChar));
 
 			// initialize new cols if any
 			for (int col=width; col<w; col++) {
@@ -196,8 +194,7 @@ VT102::SetSize(int w, int h) {
 	// allocating new rows if any
 	for (int row=RowsNoChangeNeeded; row<h; row++) {
 		CanvasChar* &cvs_row = canvas[row];
-		cvs_row =
-			(CanvasChar *)realloc((void *)cvs_row, w * sizeof (CanvasChar));
+		cvs_row = (CanvasChar *)realloc((void *)cvs_row, w * sizeof (CanvasChar));
 		
 		// initialize new cols
 		for (int col=0; col<w; col++) {
@@ -213,14 +210,18 @@ VT102::SetSize(int w, int h) {
 	}
 
 	// change scroll region
-	if (scroll_region_top == 0 && scroll_region_bottom == height - 1) {
+	if ((scroll_region_top == 0) && (scroll_region_bottom == height - 1)) {
 		scroll_region_bottom = h - 1;
+		DebugOut("VT102->SetSize: upadting scroll region bottom to %i\n", scroll_region_bottom);
 	}
 
 	// save new size
-	width = w; height = h;
+	width = w;
+	height = h;
 
 	Changed();
+
+	DebugOut("VT102->SetSize: %i, %i\n", width, height);
 
 	return (true);
 }
@@ -232,13 +233,13 @@ void VT102::Clear(int x1, int y1, int x2, int y2) {
 	} else if (x1 >= width) {
 		x1 = width - 1;
 	}
-	
+
 	if (y1 < 0) {
 		y1 = 0;
 	} else if (y1 >= height) {
 		y1 = height - 1;
 	}
-	
+
 	if (x2 < 0 || x2 >= width) x2 = width - 1;
 	if (y2 < 0 || y2 >= height) y2 = height - 1;
 
@@ -300,36 +301,39 @@ VT102::ScrollDown(int count, int start) {
 }
 
 void
-VT102::Write(const unsigned char *stream) {
-	if (*stream) {
+VT102::Write(const char *stream, int len) {
+	if (len) {
+		for (int i=0; i<len; i++) {
+			Write(stream[i]);
+		}
+	} else {
 		while (*stream) {
 			Write(*stream);
 			stream++;
 		}
-	} else {
-		// TODO signal, that the client has terminated
 	}
 }
 
 void
-VT102::Write(unsigned char ch) {
+VT102::Write(char ch) {
 	if (ch == SI) SelectCharSet(0, '0');
 	if (ch == SO) SelectCharSet(1, '0');
 
+printf("Write %i\n", ch);
 	// search for escape sequences
 	switch (state) {
 		case STATE_NORMAL:
 			switch (ch) {
 				// interpret control chars
-				case  ESC: state = STATE_ESCAPE; break; // begin of escape sequence
-				case   CR: KeyCarriageReturn();  break;
-				case   LF:
-				case   FF:
-				case   VT: KeyLineFeed(true);    break;
-				case   HT: KeyTab();             break;
-				case   BS:
-				case  127: KeyBackspace();       break;
-				case '\a': KeyBell();            break; // 7
+				case ESC: state = STATE_ESCAPE; break; // begin of escape sequence
+				case  CR: KeyCarriageReturn();  break;
+				case  LF:
+				case  FF:
+				case  VT: KeyLineFeed(true);    break;
+				case  HT: KeyTab();             break;
+				case  BS:
+				case DEL: KeyBackspace();       break;
+				case BEL: KeyBell();            break; // 7
 
 				// display all other chars
 				default: KeyInsert(char_set[ch]);
@@ -827,7 +831,7 @@ VT102::KeyTab(void) {
 }
 
 void
-VT102::KeyInsert(unsigned char ch) {
+VT102::KeyInsert(char ch) {
 	// ignore all not printable chars
 	//	if (ch < ' ') return;
 
@@ -867,7 +871,7 @@ VT102::KeyInsert(unsigned char ch) {
 void
 VT102::KeyBell(void) {
 	// misuse the incoming console (tty) to produce the bell for us
-	DebugOut("\a"); fflush(stdin);
+	//DebugOut("\a"); fflush(stdin);
 
 	bell = true;
 }
@@ -889,6 +893,8 @@ VT102::SetScrollRegion(int top, int bottom) {
 
 	scroll_region_top = top;
 	scroll_region_bottom = bottom;
+
+	DebugOut("VT102->SetScrollRegion to %i, %i\n", top, bottom);
 }
 
 void

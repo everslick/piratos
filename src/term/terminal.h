@@ -1,15 +1,12 @@
 #ifndef _TERMINAL_H_
 #define _TERMINAL_H_
 
-#include <sys/ioctl.h>
-#include <termios.h>
-
-#include <vector>
-
+#include <kernel/hal/kbd/kbd.h>
 #include <kernel/hal/fb/fb.h>
 
-#include "vt102.h"
 #include "shell.h"
+
+#define NUM_VIRT_TERMS 2
 
 class Terminal {
 
@@ -20,7 +17,7 @@ public:
 
 	bool Update(void);
 
-	bool KeyEvent(int key, int code, int modifier, int state);
+	bool KeyEvent(KBD_Event *ev);
 
 private:
 
@@ -28,19 +25,15 @@ private:
 	FB_Surface *surface;
 	FB_Surface *font[8];
 
-	Shell *CreateShell(int nr = -1);
 	void SwitchShell(int nr);
 
 	void DetermineColor(VT102::CanvasChar &c, int &fg, int &bg);
 
 	void Repaint(void);
 
-	std::vector<Shell *> shells;
-	Shell *shell;
+	Shell *shells[NUM_VIRT_TERMS];
 
-	char *program_to_start;
-
-	int current_shell, virtual_terminals;
+	int shell;
 
 	int cw, ch, width, height;
 

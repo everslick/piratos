@@ -2,7 +2,7 @@
 #define _MOUSE_H_
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 typedef struct {
@@ -30,7 +30,7 @@ int mouse_fini(void);
 int mouse_poll(MOUSE_Event *ev);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif // _MOUSE_H_

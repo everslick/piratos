@@ -2,7 +2,7 @@
 #define _FB_H_
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 typedef enum {
@@ -69,7 +69,7 @@ void fb_set_pixel(FB_Surface *surface, int x, int y, FB_Color *color);
 void fb_get_pixel(FB_Surface *surface, int x, int y, FB_Color *color);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif // _fb_H_

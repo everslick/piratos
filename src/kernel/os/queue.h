@@ -1,12 +1,14 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
+#include "FreeRTOS.h"
+
 #ifndef INC_FREERTOS_H
 	#error "include FreeRTOS.h" must appear in source files before "include queue.h"
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 /**
@@ -1223,7 +1225,7 @@ portBASE_TYPE xQueueGenericReset( xQueueHandle pxQueue, portBASE_TYPE xNewQueue 
 
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif /* QUEUE_H */

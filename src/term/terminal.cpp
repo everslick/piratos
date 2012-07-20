@@ -1,11 +1,4 @@
-#include <signal.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <stropts.h>
-
 #include <lib/gfx/glyph.h>
-
-#include <kernel/hal/kbd/kbd.h>
 
 #include "draw.h"
 
@@ -14,8 +7,6 @@
 using namespace std;
 
 Terminal::Terminal(GFX_Bitmap *bitmap) {
-	program_to_start = (char *)"/bin/bash";
-	virtual_terminals = 8;
 	FB_Rectangle r;
 
 	width  = 80;
@@ -43,10 +34,11 @@ Terminal::Terminal(GFX_Bitmap *bitmap) {
 
 	// draw white frame
 	FB_Color bg = { 0x80, 0xff, 0x80, 0xff  };
-	fb_fill(NULL, &r, &bg);
+	fb_fill(0, &r, &bg);
 
-	for (int i=0; i<virtual_terminals; i++) {
-		CreateShell();
+	// create virtual shells
+	for (int i=0; i<NUM_VIRT_TERMS; i++) {
+		shells[i] = new Shell();
 	}
 
 	// activate first virtual shell
@@ -54,30 +46,13 @@ Terminal::Terminal(GFX_Bitmap *bitmap) {
 }
 
 Terminal::~Terminal(void) {
-	vector<Shell *>::iterator it;
-
 	// delete virtual shells
-	for (it=shells.begin(); it!=shells.end(); it++) {
-		delete (*it);
+	for (int i=0; i<NUM_VIRT_TERMS; i++) {
+		delete (shells[i]);
 	}
 
 	// free widget surface
 	if (surface) fb_release_surface(surface);
-}
-
-Shell *
-Terminal::CreateShell(int nr) {
-	char * const args[] = { program_to_start, NULL };
-
-	Shell *p = new Shell("Shell", program_to_start, args);
-
-	if (nr != -1) {
-		if (p && (nr < (int)shells.size())) shells[nr] = p;
-	} else {
-		if (p) shells.push_back(p);
-	}
-
-	return (p);
 }
 
 void
@@ -113,15 +88,12 @@ void
 Terminal::SwitchShell(int nr) {
 	// clamp shell number
 	if (nr < 0) nr = 0;
-	if (nr >= (int)shells.size()) nr = (int)shells.size() - 1;
+	if (nr > NUM_VIRT_TERMS - 1) nr = NUM_VIRT_TERMS - 1;
 
-	// activate new shell
-	if ((shell = shells[nr])) {
-		// it can be, that the geometry has changed
-		shell->SetTerminalSize(width, height, geometry.w, geometry.h);
-	}
+	shell = nr;
 
-	current_shell = nr;
+	// it can be, that the geometry has changed
+	shells[shell]->vt102->SetSize(width, height);
 
 	Repaint();
 }
@@ -130,13 +102,11 @@ void
 Terminal::Repaint(void) {
 	int fg, bg;
 
-	if (!shell || !surface) return;
-
-	VT102 &vt102 = shell->GetScreen();
+	VT102 *vt102 = shells[shell]->vt102;
 
 	// draw vt102 canvas
 	for (int y=0; y<height; y++) {
-		const VT102::CanvasChar *row = vt102.Canvas()[y];
+		const VT102::CanvasChar *row = vt102->Canvas()[y];
 
 		for (int x=0; x<width; x++) {
 			VT102::CanvasChar &cell = (VT102::CanvasChar &)row[x];
@@ -160,15 +130,15 @@ Terminal::Repaint(void) {
 	}
 
 	// draw cursor
-	if (vt102.CursorVisible()) {
-		int x = vt102.CursorX(), y = vt102.CursorY();
+	if (vt102->CursorVisible()) {
+		int x = vt102->CursorX(), y = vt102->CursorY();
 
 		if (y < height) {
 			// the cursor can't get out of the screen
 			if (x >= width) x = width - 1;
 
 			VT102::CanvasChar &cell =
-				(VT102::CanvasChar &)vt102.Canvas()[y][x];
+				(VT102::CanvasChar &)vt102->Canvas()[y][x];
 
 			DetermineColor(cell, fg, bg);
 
@@ -178,77 +148,50 @@ Terminal::Repaint(void) {
 	}
 
 	// blit window to screen
-	fb_blit(surface, NULL, NULL, &geometry, NULL);
+	fb_blit(surface, 0, 0, &geometry, 0);
 	fb_flip(&geometry);
 
-	vt102.Refreshed();
+	vt102->Refreshed();
 }
 
 bool
 Terminal::Update(void) {
 	bool ret = false;
 
-	if (!shell) return (false);
+	VT102 *vt102 = shells[shell]->vt102;
 
-	VT102 &vt102 = shell->GetScreen();
+	//shell->HandleOutput();
 
-	if (!shell->HandleOutput()) {
-		// child process has been terminated
-		delete (shell);
-		shell = CreateShell(current_shell);
-	}
-
-	if (vt102.ToRefresh()) {
+	if (vt102->ToRefresh()) {
 		ret = true;
 		Repaint();
 	}
 
-	if (vt102.ToRing()) vt102.BellSeen();
+	if (vt102->ToRing()) vt102->BellSeen();
 
 	return (ret);
 }
 
 bool
-Terminal::KeyEvent(int key, int code, int modifier, int state) {
-	static const unsigned char *left   = (unsigned char *)"\033[D";
-	static const unsigned char *right  = (unsigned char *)"\033[C";
-	static const unsigned char *up     = (unsigned char *)"\033[A";
-	static const unsigned char *down   = (unsigned char *)"\033[B";
-	static const unsigned char *pgup   = (unsigned char *)"\033[5~";
-	static const unsigned char *pgdown = (unsigned char *)"\033[6~";
-	static const unsigned char *home   = (unsigned char *)"\033OH";
-	static const unsigned char *end    = (unsigned char *)"\033OF";
-	static const unsigned char *insert = (unsigned char *)"\033[2~";
-	static const unsigned char *del    = (unsigned char *)"\033[3~";
+Terminal::KeyEvent(KBD_Event *ev) {
+	int key_press_handled = 0;
 
-	if (!shell) return (false);
+	int key      = ev->symbol;
+	int code     = ev->unicode;
+	int modifier = ev->modifier;
+	int state    = ev->state;
 
 	if (state != KBD_EVENT_STATE_PRESSED) return (true);
 
 	if (modifier & KBD_MOD_LALT) {
 		switch (key) {
-			case KBD_KEY_LEFT:  SwitchShell(current_shell - 1); break;
-			case KBD_KEY_RIGHT: SwitchShell(current_shell + 1); break;
+			case KBD_KEY_LEFT:  SwitchShell(shell - 1); key_press_handled = 1; break;
+			case KBD_KEY_RIGHT: SwitchShell(shell + 1); key_press_handled = 1; break;
 		}
-	} else {
-		switch (key) {
-			case KBD_KEY_LEFT:     shell->Write(left,   3); break;
-			case KBD_KEY_RIGHT:    shell->Write(right,  3); break;
-			case KBD_KEY_UP:       shell->Write(up,     3); break;
-			case KBD_KEY_DOWN:     shell->Write(down,   3); break;
-			case KBD_KEY_PAGEUP:   shell->Write(pgup,   4); break;
-			case KBD_KEY_PAGEDOWN: shell->Write(pgdown, 4); break;
-			case KBD_KEY_HOME:     shell->Write(home,   3); break;
-			case KBD_KEY_END:      shell->Write(end,    3); break;
-			case KBD_KEY_INSERT:   shell->Write(insert, 4); break;
-			case KBD_KEY_DELETE:   shell->Write(del,    4); break;
+	}
 
-			default:
-				if ((key <= KBD_KEY_DELETE) && (key > KBD_KEY_FIRST)) {
-					shell->Write((unsigned char *)&code, 1);
-				}
-			break;
-		}
+	if (!key_press_handled) {
+		shells[shell]->KeyEvent(ev);
 	}
 
 	return (true);

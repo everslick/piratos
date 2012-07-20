@@ -1,56 +1,59 @@
 #include "line.h"
 
-#define ABS(a) (((a) < 0) ? -(a) : (a))
-
-static void
-swap(int *a, int *b) {
-	int temp = *a;
-
-	*a = *b;
-	*b = temp;
-}
+#define ABS(_A_) (((_A_)<0) ? -(_A_) : (_A_))
+#define SWAP(_A_,_B_) { _A_^=_B_; _B_^=_A_; _A_^=_B_; }
 
 void
-gfx_line_draw(FB_Surface *sfc, int x1, int y1, int x2, int y2, FB_Color *c) {
-	int tag, dx, dy, tx, ty, inc1, inc2, d, curx, cury;
+gfx_line_draw(FB_Surface *sfc, int x0, int y0, int x1, int y1, FB_Color *c) {
+	int dx = x1 - x0;
+	int dy = y1 - y0;
+	int stepx, stepy;
+	int fraction;
 
-	fb_set_pixel(sfc, x1, y1, c);
+	if (dx < 0) {
+		dx = -dx;
+		stepx = -1;
+	} else
+		stepx = 1;
 
-	if ((x1 == x2) && (y1 == y2)) return;
+	if (dy < 0) {
+		dy = -dy;
+		stepy = -1;
+	} else
+		stepy = 1;
 
-	tag = 0;
-	dx  = ABS(x2 - x1);
-	dy  = ABS(y2 - y1);
+	dy <<= 1;
+	dx <<= 1;
 
-	if (dx < dy) {
-		tag = 1;
-		swap(&x1, &y1);
-		swap(&x2, &y2);
-		swap(&dx, &dy);
-	}
+	fb_set_pixel(sfc, x0, y0, c);
 
-	tx   = (x2 - x1) > 0 ? 1 : -1;
-	ty   = (y2 - y1) > 0 ? 1 : -1;
-	curx = x1;
-	cury = y1;
-	inc1 = 2 * dy;
-	inc2 = 2 * (dy - dx);
-	d    = inc1 - dx;
+	if (dx > dy) {
+		fraction = dy - (dx >> 1);
 
-	while (curx != x2) {
-		if (d < 0) {
-			d += inc1;
-		} else {
-			cury += ty;
-			d += inc2;
+		while (x0 != x1) {
+			if (fraction >= 0) {
+				y0 += stepy;
+				fraction -= dx;
+			}
+
+			x0 += stepx;
+			fraction += dy;
+
+			fb_set_pixel(sfc, x0, y0, c);
 		}
+	} else {
+		fraction = dx - (dy >> 1);
 
-		//if (tag) {
-			fb_set_pixel(sfc, curx, cury, c);
-		//} else {
-		//	fb_set_pixel(sfc, curx, cury, fg);
-		//}
+		while (y0 != y1) {
+			if (fraction >= 0) {
+				x0 += stepx;
+				fraction -= dy;
+			}
 
-		curx += tx;
+			y0 += stepy;
+			fraction += dx;
+
+			fb_set_pixel(sfc, x0, y0, c);
+		}
 	}
 }

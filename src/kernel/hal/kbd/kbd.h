@@ -2,7 +2,7 @@
 #define _KBD_H_
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 #include "keysym.h"
@@ -32,7 +32,7 @@ int kbd_fini(void);
 int kbd_poll(KBD_Event *ev);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif // _KBD_H_

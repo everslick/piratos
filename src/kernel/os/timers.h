@@ -1,6 +1,8 @@
 #ifndef TIMERS_H
 #define TIMERS_H
 
+#include "FreeRTOS.h"
+
 #ifndef INC_FREERTOS_H
 	#error "include FreeRTOS.h must appear in source files before include timers.h"
 #endif
@@ -10,7 +12,7 @@
 #include "task.h"
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 /* IDs for commands that can be sent/received on the timer queue.  These are to
@@ -877,7 +879,7 @@ portBASE_TYPE xTimerCreateTimerTask( void ) PRIVILEGED_FUNCTION;
 portBASE_TYPE xTimerGenericCommand( xTimerHandle xTimer, portBASE_TYPE xCommandID, portTickType xOptionalValue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portTickType xBlockTime ) PRIVILEGED_FUNCTION;
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif /* TIMERS_H */

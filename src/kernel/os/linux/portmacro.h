@@ -2,7 +2,7 @@
 #define PORTMACRO_H
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 /*-----------------------------------------------------------
@@ -22,7 +22,7 @@ extern "C" {
 #define portLONG		int
 #define portSHORT		short
 #define portSTACK_TYPE  unsigned long
-#define portBASE_TYPE   long
+#define portBASE_TYPE   int
 
 #if( configUSE_16_BIT_TICKS == 1 )
 	typedef unsigned portSHORT portTickType;
@@ -109,7 +109,7 @@ extern unsigned long ulPortGetTimerValue( void );
 #define portGET_RUN_TIME_COUNTER_VALUE()			ulPortGetTimerValue()			/* Query the System time stats for this process. */
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif /* PORTMACRO_H */

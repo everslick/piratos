@@ -6,7 +6,6 @@ all the API functions to use the MPU wrappers.  That should only be done when
 task.h is included from an application file. */
 #define MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
-#include "FreeRTOS.h"
 #include "task.h"
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
@@ -87,10 +86,10 @@ typedef xQUEUE * xQueueHandle;
  * functions are documented in the API header file.
  */
 xQueueHandle xQueueGenericCreate( unsigned portBASE_TYPE uxQueueLength, unsigned portBASE_TYPE uxItemSize, unsigned char ucQueueType ) PRIVILEGED_FUNCTION;
-signed portBASE_TYPE xQueueGenericSend( xQueueHandle xQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
+signed portBASE_TYPE xQueueGenericSend( xQueueHandle xQueue, void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
 unsigned portBASE_TYPE uxQueueMessagesWaiting( const xQueueHandle pxQueue ) PRIVILEGED_FUNCTION;
 void vQueueDelete( xQueueHandle xQueue ) PRIVILEGED_FUNCTION;
-signed portBASE_TYPE xQueueGenericSendFromISR( xQueueHandle pxQueue, const void * const pvItemToQueue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
+signed portBASE_TYPE xQueueGenericSendFromISR( xQueueHandle pxQueue, void * const pvItemToQueue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portBASE_TYPE xCopyPosition ) PRIVILEGED_FUNCTION;
 signed portBASE_TYPE xQueueGenericReceive( xQueueHandle pxQueue, void * const pvBuffer, portTickType xTicksToWait, portBASE_TYPE xJustPeeking ) PRIVILEGED_FUNCTION;
 signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle pxQueue, void * const pvBuffer, signed portBASE_TYPE *pxTaskWoken ) PRIVILEGED_FUNCTION;
 xQueueHandle xQueueCreateMutex( unsigned char ucQueueType ) PRIVILEGED_FUNCTION;
@@ -500,7 +499,7 @@ xQueueHandle xReturn = NULL;
 #endif /* configUSE_COUNTING_SEMAPHORES */
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xQueueGenericSend( xQueueHandle pxQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition )
+signed portBASE_TYPE xQueueGenericSend( xQueueHandle pxQueue, void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition )
 {
 signed portBASE_TYPE xEntryTimeSet = pdFALSE;
 xTimeOutType xTimeOut;
@@ -825,7 +824,7 @@ xTimeOutType xTimeOut;
 #endif /* configUSE_ALTERNATIVE_API */
 /*-----------------------------------------------------------*/
 
-signed portBASE_TYPE xQueueGenericSendFromISR( xQueueHandle pxQueue, const void * const pvItemToQueue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portBASE_TYPE xCopyPosition )
+signed portBASE_TYPE xQueueGenericSendFromISR( xQueueHandle pxQueue, void * const pvItemToQueue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portBASE_TYPE xCopyPosition )
 {
 signed portBASE_TYPE xReturn;
 unsigned portBASE_TYPE uxSavedInterruptStatus;

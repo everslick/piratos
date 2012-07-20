@@ -24,6 +24,7 @@ OBJCOPY   = $(ARCH)-objcopy
 
 AFLAGS    = -march=arm -mcpu=arm1176jzf-s
 CFLAGS    = -marm -mcpu=arm1176jzf-s
+LFLAGS    = -nostdlib -nostartfiles -fPIC
 
 else
 
@@ -41,7 +42,7 @@ AFLAGS   +=
 
 else
 
-CFLAGS   += -O0 -g -Werror -DDEBUG
+CFLAGS   += -O0 -g -Wall -DDEBUG
 AFLAGS   += -g
 
 endif
@@ -70,7 +71,7 @@ MODULES  := .                            \
             fs                           \
             fs/fat
 
-CPPFLAGS := $(CFLAGS)
+CPPFLAGS := $(CFLAGS) -fpermissive
 
 CFLAGS   += -std=gnu99
 
@@ -84,9 +85,6 @@ CSRC     := $(foreach sdir,$(SRC_DIR),$(wildcard $(sdir)/*.c))
 COBJ     := $(CSRC:.c=.o)
 
 INCLUDES := $(addprefix -I,$(SRC_DIR))
-
-#vpath %.c $(SRC_DIR)
-#vpath %.s $(SRC_DIR)
 
 OBJ = $(AOBJ) $(COBJ) $(CPPOBJ)
 
@@ -105,7 +103,8 @@ clean:
 	$(CPP) $(INCLUDES) $(CPPFLAGS) -c -o $*.o $<
 
 %.o: %.c
-	$(CC) $(INCLUDES) $(CFLAGS) -c -o $*.o $<
+	$(CPP) $(INCLUDES) $(CPPFLAGS) -c -o $*.o $<
+#	$(CC) $(INCLUDES) $(CFLAGS) -c -o $*.o $<
 
 %.o: %.s
 	$(AS) $(INCLUDES) $(AFLAGS) -o $*.o $<

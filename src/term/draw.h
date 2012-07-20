@@ -6,7 +6,7 @@
 #include <lib/gfx/bitmap.h>
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 void DrawFont(GFX_Bitmap *bitmap, FB_Surface *font[8]);
@@ -20,7 +20,7 @@ void DrawGlyph(FB_Surface *sfc,
 					int fg, int bg);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif // _TERMINAL_DRAW_H_

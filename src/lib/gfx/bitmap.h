@@ -4,7 +4,7 @@
 #include <kernel/hal/fb/fb.h>
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 typedef struct GFX_Bitmap {
@@ -17,7 +17,7 @@ typedef struct GFX_Bitmap {
 FB_Surface *gfx_bitmap_load(GFX_Bitmap *bitmap);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif // _GFX_BITMAP_H_

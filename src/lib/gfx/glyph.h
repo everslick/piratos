@@ -8,7 +8,7 @@
 #include <lib/gfx/bitmap.h>
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 FB_Surface *gfx_glyph_load(GFX_Bitmap *bitmap, FB_Color *c);
@@ -18,7 +18,7 @@ void gfx_glyph_draw(FB_Surface *sfc, FB_Surface *font, int x, int y, unsigned ch
 void gfx_glyph_string(FB_Surface *sfc, FB_Surface *font, int x, int y, const char *fmt, ...);
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif // _GFX_GLYPH_H_

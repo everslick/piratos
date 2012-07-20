@@ -1,6 +1,8 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include "FreeRTOS.h"
+
 #ifndef INC_FREERTOS_H
 	#error "include FreeRTOS.h must appear in source files before include task.h"
 #endif
@@ -9,7 +11,7 @@
 #include "list.h"
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 /*-----------------------------------------------------------
@@ -1245,7 +1247,7 @@ void vTaskPriorityDisinherit( xTaskHandle * const pxMutexHolder ) PRIVILEGED_FUN
  * Generic version of the task creation function which is in turn called by the
  * xTaskCreate() and xTaskCreateRestricted() macros.
  */
-signed portBASE_TYPE xTaskGenericCreate( pdTASK_CODE pxTaskCode, const signed char * const pcName, unsigned short usStackDepth, void *pvParameters, unsigned portBASE_TYPE uxPriority, xTaskHandle *pxCreatedTask, portSTACK_TYPE *puxStackBuffer, const xMemoryRegion * const xRegions ) PRIVILEGED_FUNCTION;
+signed portBASE_TYPE xTaskGenericCreate( pdTASK_CODE pxTaskCode, const char * const pcName, unsigned short usStackDepth, void *pvParameters, unsigned portBASE_TYPE uxPriority, xTaskHandle *pxCreatedTask, portSTACK_TYPE *puxStackBuffer, const xMemoryRegion * const xRegions ) PRIVILEGED_FUNCTION;
 
 /*
  * Get the uxTCBNumber assigned to the task referenced by the xTask parameter.
@@ -1260,7 +1262,7 @@ void vTaskSetTaskNumber( xTaskHandle xTask, unsigned portBASE_TYPE uxHandle );
 
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif /* TASK_H */

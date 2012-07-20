@@ -1,8 +1,6 @@
 #ifndef _TERMINAL_VT102_H_
 #define _TERMINAL_VT102_H_
 
-#include <sys/ioctl.h>
-#include <termios.h>
 #include <stdarg.h>
 
 #define CONSOLE_MAXCOLS 256
@@ -21,6 +19,8 @@
 #define CAN '\030' // Cancel
 #define SUB '\032' // Substitude
 #define ESC '\033' // Escape
+#define DEL   127  // Delete
+#define BEL   '\a' // Bell
 
 class VT102 {
 
@@ -31,11 +31,10 @@ public:
 	VT102(void);
 	virtual ~VT102(void);
 
-	void Write(const unsigned char *stream);
+	void Write(const char *stream, int len = 0);
+	void Write(char ch);
 
 	const CanvasChar **Canvas(void) { return ((const CanvasChar **)canvas); }
-
-	void SetOutputFD(int f) { fd = f; }
 
 	bool SetSize(int w, int h);
 
@@ -56,6 +55,9 @@ public:
 	bool ToRing(void)    { return (bell);    }
 	void BellSeen(void)  { bell = false;     }
 
+	void MoveTo(int col, int row);
+	void MoveRelative(int col, int row);
+
 	struct CanvasChar {
 		CanvasChar(void) {
 			ch = ' ';
@@ -72,7 +74,7 @@ public:
 			use_bg     = false;
 		}
 
-		CanvasChar(unsigned char c, const CanvasChar &attr) {
+		CanvasChar(char c, const CanvasChar &attr) {
 			ch = c;
 
 			foreground = attr.foreground;
@@ -87,10 +89,10 @@ public:
 			use_bg     = attr.use_bg;
 		}
 
-		unsigned char ch;
+		char ch;
 
-		unsigned char foreground;
-		unsigned char background;
+		char foreground;
+		char background;
 
 		bool bold;
 		bool underscore;
@@ -161,7 +163,7 @@ private:
 	void KeyBackspace(void);
 	void KeyDelete(void);
 	void KeyTab(void);
-	void KeyInsert(unsigned char ch = ' ');
+	void KeyInsert(char ch = ' ');
 	void KeyBell(void);
 
 	void SetAttributes(int *attributes, int count);
@@ -184,15 +186,10 @@ private:
 	void ReportDeviceStatus(int request);
 	void ReportDeviceAttributes(int request);
 
-	void MoveTo(int col, int row);
-	void MoveRelative(int col, int row);
-
 	void SetScrollRegion(int top, int bottom);
 
 	void CursorPosSave(void);
 	void CursorPosRestore(void);
-
-	void Write(unsigned char ch);
 
 	void SelectCharSet(int g, char set);
 
@@ -217,9 +214,7 @@ private:
 
 	int tabs[CONSOLE_MAXCOLS];
 
-	unsigned char char_set[256];
-
-	int fd;
+	char char_set[256];
 
 };
 

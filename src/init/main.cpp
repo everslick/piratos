@@ -1,47 +1,40 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+
+#include <kernel/os/FreeRTOS.h>
+#include <kernel/os/task.h>
 
 #include <kernel/hal/mouse/mouse.h> // mouse
-#include <kernel/hal/kbd/kbd.h>     // keyboard
-#include <kernel/hal/fb/fb.h>       // framebuffer
+#include <kernel/hal/kbd/kbd.h>	  // keyboard
+#include <kernel/hal/fb/fb.h>		 // framebuffer
 
 //#include <lib/gfx/bitmap.h>
 #include <lib/gfx/glyph.h>
 
-#include "terminal.h"
+#include "term/terminal.h"
+#include "cli/cli.h"
+#include "fs/fs.h"
 
 static const char *str = "pir{A}tos version " VERSION " (" PLATFORM ")";
+
+static int quit = 0;
 
 extern GFX_Bitmap piratos_logo;
 extern GFX_Bitmap piratos_font;
 
-extern "C"{
+//extern "C"{
 void piratos(void);
-}
+//}
 
-void
-piratos(void) {
+static void
+AnimationTask(void *parameters) {
 	FB_Color bg = { 0x20, 0x10, 0x60, 0xff };
-	FB_Color fg = { 0xc0, 0x60, 0x10, 0xff };
-	Terminal *terminal = NULL;
 	FB_Surface *logo = NULL;
-	FB_Surface *font = NULL;
 	FB_Rectangle dst, upd;
-	MOUSE_Event mouse_ev;
-	KBD_Event kbd_ev;
 	int dir, pos;
 
-	printf("%s\n", str);
-
-	fb_init();
-	fb_mode(FB_MODE_1280x768, FB_FORMAT_BEST);
-	fb_fill(NULL, NULL, &bg);
-	fb_flip(NULL);
-
 	logo = gfx_bitmap_load(&piratos_logo);
-	font = gfx_glyph_load(&piratos_font, &fg);
-
-	gfx_glyph_string(NULL, font, 10, 540, str);
 
 	pos = (1280 - logo->width) / 2;
 	dst.y = 768 - logo->height;
@@ -49,12 +42,7 @@ piratos(void) {
 	dst.h = logo->height;
 	dir = 3;
 
-	kbd_init();
-	mouse_init();
-
-	terminal = new Terminal(&piratos_font);
-
-	while (1) {
+	while (!quit) {
 		dst.x = pos;
 		pos += dir;
 
@@ -64,6 +52,17 @@ piratos(void) {
 
 		if ((pos >= 1280 - dst.w) || (pos <= 0)) dir *= -1;
 
+		vTaskDelay(10);
+	}
+}
+
+static void
+ShellTask(void *arg) {
+	Terminal *terminal = (Terminal *)arg;
+	MOUSE_Event mouse_ev;
+	KBD_Event kbd_ev;
+
+	while (!quit) {
 		if (mouse_poll(&mouse_ev)) {
 			//printf("mouse poll: %i, %i, %i, %i\n",
 			//	mouse_ev.x, mouse_ev.y, mouse_ev.state, mouse_ev.button);
@@ -75,25 +74,45 @@ piratos(void) {
 			if (kbd_ev.state == KBD_EVENT_STATE_PRESSED)
 				if (kbd_ev.symbol == KBD_KEY_ESCAPE)
 					if (kbd_ev.modifier == KBD_MOD_LALT)
-						break;
+						{ quit = 1; exit(0); }
 
-			terminal->KeyEvent(kbd_ev.symbol, kbd_ev.unicode, kbd_ev.modifier, kbd_ev.state);
+			terminal->KeyEvent(&kbd_ev);
 		}
 
 		terminal->Update();
 
-		usleep(10 * 1000);
+		//usleep(10*1000);
+		vTaskDelay(10);
 	}
+}
 
-	printf("CLEANUP!\n");
+void
+piratos(void) {
+	FB_Color bg = { 0x20, 0x10, 0x60, 0xff };
+	FB_Color fg = { 0xc0, 0x60, 0x10, 0xff };
+	FB_Surface *font = NULL;
 
-	delete (terminal);
+	printf("%s\n", str);
 
-	fb_release_surface(logo);
+	fb_init();
+	fb_mode(FB_MODE_1280x768, FB_FORMAT_BEST);
+	fb_fill(NULL, NULL, &bg);
+	fb_flip(NULL);
 
-	mouse_fini();
-	kbd_fini();
-	fb_fini();
+	font = gfx_glyph_load(&piratos_font, &fg);
 
-	printf("EXIT!\n");
+	gfx_glyph_string(NULL, font, 10, 540, str);
+
+	cli_register_commands();
+
+	fs_init();
+	kbd_init();
+	mouse_init();
+
+	Terminal *terminal = new Terminal(&piratos_font);
+
+	xTaskCreate(AnimationTask, "LOGOx",  configMINIMAL_STACK_SIZE, NULL, 8, NULL);
+	xTaskCreate(ShellTask,     "SHELLx", configMINIMAL_STACK_SIZE, terminal, 12, NULL);
+
+	vTaskStartScheduler();
 }

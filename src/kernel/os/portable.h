@@ -33,7 +33,7 @@
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+//extern "C" {
 #endif
 
 /*
@@ -66,7 +66,7 @@ portBASE_TYPE xPortStartScheduler( void ) PRIVILEGED_FUNCTION;
 void vPortEndScheduler( void ) PRIVILEGED_FUNCTION;
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 #endif /* PORTABLE_H */

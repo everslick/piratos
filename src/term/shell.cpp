@@ -1,301 +1,124 @@
 #include <stdio.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <stropts.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <string.h>
+#include <stdarg.h>
 
 #include "shell.h"
 
-Shell::Shell(const char *ttl, const char *cmd, char * const argv[]) {
-	master_pty = -1;
-	child_pid = 0;
-	running = false;
+Shell::Shell(void) {
+	cmd = NULL;
 
-	title = strdup(ttl);
+	vt102 = new VT102();
 
-	Open(cmd, argv);
+	cli = cli_new(vt102);
+
+	input = input_new(vt102);
+
+	xTaskCreate(Main, "SHELLx",  configMINIMAL_STACK_SIZE, this, 8, &task);
 }
 
 Shell::~Shell(void) {
-	Close();
-	CleanUp();
+	vTaskDelete(task);
 
-	free(title);
-}
+	input_destroy(input);
 
-int
-Shell::DebugOut(const char *fmt, ...) {
-	int n = 0;
+	cli_destroy(cli);
 
-#if 0
-	va_list ap;
-
-	va_start(ap, fmt);
-	n = vprintf(fmt, ap);
-	va_end(ap);
-#endif
-
-	return (n);
+	delete (vt102);
 }
 
 void
-Shell::CloseAll(int fd) {
-	int fdlimit = 100; // sysconf(SC_OPEN_MAX);
+Shell::Main(void *thiz) {
+	Shell *s = (Shell *)thiz;
+	char *args[MAX_ARGUMENT_NUM];
+	int nargs;
 
-	// close all FDs >= a specified value
-	while (fd < fdlimit) close(fd++);
-}
+	cli_set_cwd(s->cli, (char *)"/");
+	cli_set_prompt(s->cli, (char *)"/");
 
-bool
-Shell::Open(const char *command, char * const argv[]) {
-	// let's watch if the slave is already running
-	if (!running) {
-		DebugOut("opening master\n");
+	while (!s->cli->cli_quit) {
+		input_new_line(s->input, s->cli->cli_prompt);
 
-		// open a master
-		if ((master_pty = open("/dev/ptmx", O_RDWR | O_NONBLOCK)) < 0) {
-			DebugOut("open master pty failed: %s\n", strerror(errno));
+		while (!s->cmd) {
+			vTaskDelay(20);
+		}		
 
-			return (false);
-		}
+		cli_parse_args(s->cmd, args, &nargs);
+		s->cmd = NULL;
 
-		DebugOut("master opened %i\n", master_pty);
+		if (nargs == 0) continue;
 
-		// change permission of slave
-		if (grantpt(master_pty) < 0) {
-			DebugOut("could not change permission of slave: %s\n", strerror(errno));
-
-			return (false);
-		}
-
-		// unlock slave
-		if (unlockpt(master_pty) < 0) {
-			DebugOut("could not unlock slave: %s", strerror(errno));
-
-			return (false);
-		}
-
-		char *slavename = ptsname(master_pty);
-
-		// get name of slave
-		if (!slavename) {
-			DebugOut("could not get a slave name\n");
-
-			return (false);
-		}
-
-		DebugOut("name of slave device is %s\n", slavename);
-
-		int pid = fork();
-
-		if (pid < 0) {
-			close(master_pty);
-			master_pty = 0;
-			DebugOut("fork failed\n");
-
-			return (false);
-		}
-
-		if (pid == 0) {
-			DebugOut("slave: reached\n");
-
-			// we are in the child process
-			CloseAll(0);
-
-			// we need to make this process a session group leader, because
-			// it is on a new PTY, and things like job control simply will
-			// not work correctly unless there is a session group leader
-			// and process group leader (which a session group leader
-			// automatically is). this also disassociates us from our old
-			// controlling tty.
-
-			if (setsid() < 0) {
-				DebugOut("could not set session leader for %s\n", slavename);
-			}
-
-			DebugOut("slave: setsid ok\n");
-
-			// open slave
-			int slave = open(slavename, O_RDWR);
-
-			if (slave < 0) {
-				DebugOut("open slave pty failed: %s\n", strerror(errno));
-				exit(1);
-			}
-
-			DebugOut("slave: pts id is %i\n", slave);
-
-			ioctl(slave, I_PUSH, "ptem");   // push ptem
-			ioctl(slave, I_PUSH, "ldterm"); // push ldterm
-
-			// tie us to our new controlling tty
-			if (ioctl(slave, TIOCSCTTY, NULL)) {
-				DebugOut("could not set new controlling tty for %s\n", slavename);
-			}
-
-			DebugOut("slave: ioctl ok\n");
-
-			// make slave pty be standard in, out, and error
-			dup2(slave,  STDIN_FILENO);
-			dup2(slave, STDOUT_FILENO);
-			dup2(slave, STDERR_FILENO);
-
-			// at this point the slave pty should be standard input
-			if (slave > 2) close(slave);
-
-			// tell the executing program which protocol we are using
-			putenv((char *)"TERM=linux"); // linux
-
-			// start the child process
-			execv(command, argv);
-
-			// exec has failed
-			_exit(1);
-		}
-
-		// save the child id
-		child_pid = pid;
-		running = true;
-
-		// so the terminal emulation can respond to requests from the shell
-		vt102.SetOutputFD(master_pty);
-
-		DebugOut("master: reached\n");
-		DebugOut("started: %s pid=%i pts=%i\n", title, pid, master_pty);
-
-		// we are in the master process
-	}
-
-	return (true);
-}
-
-bool
-Shell::ShellWaitPid(int pid, int timeout) {
-	if (pid < 0) return (true);
-
-	for (int i=timeout/100; i>0; i--) {
-		if (waitpid(pid, NULL, WNOHANG) == pid) return (true);
-
-		HandleOutput();
-
-		usleep(100 * 1000);
-	}
-
-	// timeout
-	return (false);
-}
-
-bool
-Shell::Close(void) {
-	// give the process the ability to quit
-	if (running && (child_pid >= 0)) {
-		kill(child_pid, SIGTERM);
-		kill(child_pid, SIGHUP);
-
-		if (!ShellWaitPid(child_pid, 500)) {
-			DebugOut("killing non interuptable child: pid=%i\n", child_pid);
-			kill(child_pid, SIGKILL);
-
-			if (!ShellWaitPid(child_pid, 500)) {
-				DebugOut("timeout on killing child: pid=%i\n", child_pid);
-
-				return (false);
+		// special case for man command
+		if (!strcmp(args[0], "man")) {
+			if (nargs == 2) {
+				if (cli_cmd_help(s->cli, args) != 0) {
+					cli_print(s->cli, "man: no manual for command '%s' available\n", args[1]);
+				}
 			} else {
-				child_pid = -1;
+				cli_print(s->cli, "USAGE: man [command]\n");
 			}
-		} else {
-			child_pid = -1;
-		}
-	}
 
-	return (true);
-}
-
-void
-Shell::CleanUp(void) {
-	if (running) {
-		if (child_pid >= 0) {
-			// avoid zombies
-			waitpid(child_pid, NULL, WNOHANG);
-
-			DebugOut("child terminated pid=%i\n", child_pid);
-
-			child_pid = -1;
+			continue;
 		}
 
-		if (master_pty >= 0) {
-			if (close(master_pty) < 0) {
-				DebugOut("could not close pts: pts=%i\n", master_pty);
-			} else {
-				master_pty = -1;
-			}
-		}
+		if (cli_cmd_exec(s->cli, args) == 0) continue;
 
-		running = false;
-	}
-}
-
-void
-Shell::SetTerminalSize(int char_w, int char_h, int pixel_w, int pixel_h) {
-	vt102.SetSize(char_w, char_h);
-
-	if (running) {
-		winsize ws;
-
-		ws.ws_col = char_w;
-		ws.ws_row = char_h;
-		ws.ws_xpixel = pixel_w;
-		ws.ws_ypixel = pixel_h;
-
-		// try to set window size; failure isn't critical
-		if (ioctl(master_pty, TIOCSWINSZ, &ws) < 0) {
-			DebugOut("could not set pts window size: pts=%i\n", master_pty);
-		}
-	}
-}
-
-void
-Shell::Write(const unsigned char *data, int len) {
-	if (running) {
-		int i = write(master_pty, (char *)data, len);
-
-		if (i < 0 && errno != EINTR) CleanUp();
+		cli_print(s->cli, "%s: command not found\n", args[0]);
 	}
 }
 
 bool
-Shell::HandleOutput(void) {
-	if (master_pty >= 0) {
-		int i = 0;
+Shell::KeyEvent(KBD_Event *ev) {
+	static const char *left   = "\033[D";
+	static const char *right  = "\033[C";
+	static const char *up     = "\033[A";
+	static const char *down   = "\033[B";
+	static const char *pgup   = "\033[5~";
+	static const char *pgdown = "\033[6~";
+	static const char *home   = "\033OH";
+	static const char *end    = "\033OF";
+	static const char *insert = "\033[2~";
+	static const char *del    = "\033[3~";
 
-		while (1) {
-			i = read(master_pty, buffer, INPUT_BUFSIZE-1);
+	int key      = ev->symbol;
+	int code     = ev->unicode;
+	int modifier = ev->modifier;
+	int state    = ev->state;
 
-			if (i > 0) {
-				buffer[i] = '\0';    // terminate string
-				vt102.Write(buffer); // print on screen
-			} else if (i == 0 || (i < 0 && errno != EAGAIN && errno != EINTR)) {
-				// slave has terminated, so free the pty ...
-				CleanUp();
+	if (state != KBD_EVENT_STATE_PRESSED) return (false);
 
-				// ... and signal the user interface (with an empty string)
-				vt102.Write((unsigned char*)"");
-
-				// brings the shells to remove me from its polling list
-				return (false);
-			}
-
-			if (i < INPUT_BUFSIZE) break;
-
-			// if the buffer is full then do a new cycle to ensure
-			// that all available data were read
+	if (modifier & KBD_MOD_CTRL) {
+		switch (key) {
+			case KBD_KEY_d: /* logout shell */ break;
 		}
+	} else {
+		switch (key) {
+			case KBD_KEY_LEFT:     vt102->Write(left,   3); break;
+			case KBD_KEY_RIGHT:    vt102->Write(right,  3); break;
+			case KBD_KEY_UP:       vt102->Write(up,     3); break;
+			case KBD_KEY_DOWN:     vt102->Write(down,   3); break;
+			case KBD_KEY_PAGEUP:   vt102->Write(pgup,   4); break;
+			case KBD_KEY_PAGEDOWN: vt102->Write(pgdown, 4); break;
+			case KBD_KEY_HOME:     vt102->Write(home,   3); break;
+			case KBD_KEY_END:      vt102->Write(end,    3); break;
+			case KBD_KEY_INSERT:   vt102->Write(insert, 4); break;
+			case KBD_KEY_DELETE:   vt102->Write(del,    4); break;
+
+			default:
+				if ((key <= KBD_KEY_DELETE) && (key > KBD_KEY_FIRST)) {
+					vt102->Write((char *)&code, 1);
+				}
+			break;
+		}
+	}
+
+	input_key_event(input, ev);
+
+	if (key == KBD_KEY_RETURN) {
+		input_read_line(input, &cmd);
+
+		vt102->Write(CR);
+		vt102->Write(LF);
 	}
 
 	return (true);

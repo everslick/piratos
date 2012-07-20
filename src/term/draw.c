@@ -217,6 +217,8 @@ DrawGlyph(FB_Surface *sfc,
 
 	if (bg != -1) fb_fill(sfc, &d, AnsiColor(bg));
 
+	if (c == 32) return;
+
 	if (c > 32) {
 		s.x = (c - 32) * w;
 		fb_blit(font[fg], &s, sfc, &d, 0);

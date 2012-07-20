@@ -67,7 +67,7 @@ input_new(VT102 *vt102) {
 
 /** Destroy text input field. */
 void
-input_destroy(Input *input) {
+input_free(Input *input) {
 	free(input);
 }
 

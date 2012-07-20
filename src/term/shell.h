@@ -9,26 +9,22 @@
 #include "vt102.h"
 #include "input.h"
 
-class Shell {
 
-public:
-
-	Shell(void);
-	~Shell(void);
-
-	bool KeyEvent(KBD_Event *ev);
-
+typedef struct {
 	char *cmd;
-
 	CLI *cli;
 
 	Input *input;
 	VT102 *vt102;
 
 	xTaskHandle task;
+} Shell;
 
-	static void Main(void *thiz);
+Shell *shell_new(void);
+void   shell_free(Shell *shell);
 
-};
+bool shell_key_event(Shell *shell, KBD_Event *ev);
+
+void shell_main(void *thiz);
 
 #endif /* _SHELL_H_ */

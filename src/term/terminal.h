@@ -8,35 +8,20 @@
 
 #define NUM_VIRT_TERMS 2
 
-class Terminal {
-
-public:
-
-	Terminal(GFX_Bitmap *bitmap);
-	~Terminal(void);
-
-	bool Update(void);
-
-	bool KeyEvent(KBD_Event *ev);
-
-private:
-
+typedef struct {
 	FB_Rectangle geometry;
 	FB_Surface *surface;
 	FB_Surface *font[8];
 
-	void SwitchShell(int nr);
-
-	void DetermineColor(VT102::CanvasChar &c, int &fg, int &bg);
-
-	void Repaint(void);
-
 	Shell *shells[NUM_VIRT_TERMS];
 
-	int shell;
+	int shell, cw, ch, width, height;
+} Terminal;
 
-	int cw, ch, width, height;
+Terminal *terminal_new(GFX_Bitmap *bitmap);
+void      terminal_free(Terminal *terminal);
 
-};
+int terminal_update(Terminal *terminal);
+int terminal_key_event(Terminal *terminal, KBD_Event *ev);
 
 #endif // _TERMINAL_H_

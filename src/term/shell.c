@@ -1,34 +1,41 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 
 #include "shell.h"
 
-Shell::Shell(void) {
-	cmd = NULL;
+Shell *
+shell_new(void) {
+	Shell *shell = (Shell *)malloc(sizeof (Shell));
 
-	vt102 = new VT102();
+	shell->cmd = NULL;
 
-	cli = cli_new(vt102);
+	shell->vt102 = new VT102();
 
-	input = input_new(vt102);
+	shell->cli = cli_new(shell->vt102);
 
-	xTaskCreate(Main, "SHELLx",  configMINIMAL_STACK_SIZE, this, 8, &task);
-}
+	shell->input = input_new(shell->vt102);
 
-Shell::~Shell(void) {
-	vTaskDelete(task);
+	xTaskCreate(shell_main, "SHELLx",  configMINIMAL_STACK_SIZE, shell, 8, &shell->task);
 
-	input_destroy(input);
-
-	cli_destroy(cli);
-
-	delete (vt102);
+	return (shell);
 }
 
 void
-Shell::Main(void *thiz) {
+shell_free(Shell *shell) {
+	vTaskDelete(shell->task);
+
+	input_free(shell->input);
+
+	cli_free(shell->cli);
+
+	delete (shell->vt102);
+}
+
+void
+shell_main(void *thiz) {
 	Shell *s = (Shell *)thiz;
 	char *args[MAX_ARGUMENT_NUM];
 	int nargs;
@@ -68,7 +75,7 @@ Shell::Main(void *thiz) {
 }
 
 bool
-Shell::KeyEvent(KBD_Event *ev) {
+shell_key_event(Shell *shell, KBD_Event *ev) {
 	static const char *left   = "\033[D";
 	static const char *right  = "\033[C";
 	static const char *up     = "\033[A";
@@ -93,32 +100,32 @@ Shell::KeyEvent(KBD_Event *ev) {
 		}
 	} else {
 		switch (key) {
-			case KBD_KEY_LEFT:     vt102->Write(left,   3); break;
-			case KBD_KEY_RIGHT:    vt102->Write(right,  3); break;
-			case KBD_KEY_UP:       vt102->Write(up,     3); break;
-			case KBD_KEY_DOWN:     vt102->Write(down,   3); break;
-			case KBD_KEY_PAGEUP:   vt102->Write(pgup,   4); break;
-			case KBD_KEY_PAGEDOWN: vt102->Write(pgdown, 4); break;
-			case KBD_KEY_HOME:     vt102->Write(home,   3); break;
-			case KBD_KEY_END:      vt102->Write(end,    3); break;
-			case KBD_KEY_INSERT:   vt102->Write(insert, 4); break;
-			case KBD_KEY_DELETE:   vt102->Write(del,    4); break;
+			case KBD_KEY_LEFT:     shell->vt102->Write(left,   3); break;
+			case KBD_KEY_RIGHT:    shell->vt102->Write(right,  3); break;
+			case KBD_KEY_UP:       shell->vt102->Write(up,     3); break;
+			case KBD_KEY_DOWN:     shell->vt102->Write(down,   3); break;
+			case KBD_KEY_PAGEUP:   shell->vt102->Write(pgup,   4); break;
+			case KBD_KEY_PAGEDOWN: shell->vt102->Write(pgdown, 4); break;
+			case KBD_KEY_HOME:     shell->vt102->Write(home,   3); break;
+			case KBD_KEY_END:      shell->vt102->Write(end,    3); break;
+			case KBD_KEY_INSERT:   shell->vt102->Write(insert, 4); break;
+			case KBD_KEY_DELETE:   shell->vt102->Write(del,    4); break;
 
 			default:
 				if ((key <= KBD_KEY_DELETE) && (key > KBD_KEY_FIRST)) {
-					vt102->Write((char *)&code, 1);
+					shell->vt102->Write((char *)&code, 1);
 				}
 			break;
 		}
 	}
 
-	input_key_event(input, ev);
+	input_key_event(shell->input, ev);
 
 	if (key == KBD_KEY_RETURN) {
-		input_read_line(input, &cmd);
+		input_read_line(shell->input, &shell->cmd);
 
-		vt102->Write(CR);
-		vt102->Write(LF);
+		shell->vt102->Write(CR);
+		shell->vt102->Write(LF);
 	}
 
 	return (true);

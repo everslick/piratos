@@ -242,6 +242,6 @@ cli_new(VT102 *vt102) {
 }
 
 void
-cli_destroy(CLI *cli) {
+cli_free(CLI *cli) {
 	free(cli);
 }

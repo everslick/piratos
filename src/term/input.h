@@ -73,7 +73,7 @@ typedef struct {
 } Input;
 
 Input *input_new(VT102 *vt102);
-void   input_destroy(Input *input);
+void   input_free(Input *input);
 
 void   input_new_line(Input *input, const char *prompt);
 void   input_read_line(Input *input, char **dstr);

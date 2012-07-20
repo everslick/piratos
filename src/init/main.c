@@ -76,10 +76,10 @@ ShellTask(void *arg) {
 					if (kbd_ev.modifier == KBD_MOD_LALT)
 						{ quit = 1; exit(0); }
 
-			terminal->KeyEvent(&kbd_ev);
+			terminal_key_event(terminal, &kbd_ev);
 		}
 
-		terminal->Update();
+		terminal_update(terminal);
 
 		//usleep(10*1000);
 		vTaskDelay(10);
@@ -109,7 +109,7 @@ piratos(void) {
 	kbd_init();
 	mouse_init();
 
-	Terminal *terminal = new Terminal(&piratos_font);
+	Terminal *terminal = terminal_new(&piratos_font);
 
 	xTaskCreate(AnimationTask, "LOGOx",  configMINIMAL_STACK_SIZE, NULL, 8, NULL);
 	xTaskCreate(ShellTask,     "SHELLx", configMINIMAL_STACK_SIZE, terminal, 12, NULL);

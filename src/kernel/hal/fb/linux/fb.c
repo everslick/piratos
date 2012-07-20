@@ -121,8 +121,8 @@ fb_blit(FB_Surface *ss, FB_Rectangle *sr, FB_Surface *ds, FB_Rectangle *dr, FB_R
 	SDL_Surface *sdl_ds = screen;
 	SDL_Rect sdl_sr, sdl_dr;
 
-	if (ss) sdl_ss = ss->user;
-	if (ds) sdl_ds = ds->user;
+	if (ss) sdl_ss = (SDL_Surface *)ss->user;
+	if (ds) sdl_ds = (SDL_Surface *)ds->user;
 
 	if (sr) {
 		FB2SDL_Rectangle(sr, &sdl_sr);
@@ -163,7 +163,7 @@ fb_create_surface(int w, int h, FB_Format format) {
 	sdl_surface = SDL_DisplayFormatAlpha(tmp_surface);
 	SDL_FreeSurface(tmp_surface);
 
-	fb_surface = malloc(sizeof (FB_Surface));
+	fb_surface = (FB_Surface *)malloc(sizeof (FB_Surface));
 
 	fb_surface->format = format;
 	fb_surface->flags  = sdl_surface->flags;
@@ -178,7 +178,7 @@ fb_create_surface(int w, int h, FB_Format format) {
 
 void
 fb_release_surface(FB_Surface *surface) {
-	SDL_FreeSurface(surface->user);
+	SDL_FreeSurface((SDL_Surface *)surface->user);
 
 	free(surface);
 }
@@ -195,7 +195,7 @@ fb_fill(FB_Surface *surface, FB_Rectangle *rect, FB_Color *color) {
 	}
 
 	if (surface) {
-		dst = surface->user;
+		dst = (SDL_Surface *)surface->user;
 	}
 
 	c = SDL_MapRGBA(dst->format, color->r, color->g, color->b, color->a);
@@ -210,7 +210,7 @@ fb_set_pixel(FB_Surface *surface, int x, int y, FB_Color *color) {
 	int bpp;
 
 	if (surface) {
-		dst = surface->user;
+		dst = (SDL_Surface *)surface->user;
 	}
 
 	bpp = dst->format->BytesPerPixel; 

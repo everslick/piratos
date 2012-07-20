@@ -39,7 +39,7 @@ void cli_get_owd(CLI *cli, char *owd);
 void cli_set_prompt(CLI *cli, char *prompt);
 
 CLI *cli_new(VT102 *vt102);
-void cli_destroy(CLI *cli);
+void cli_free(CLI *cli);
 
 #ifdef __cplusplus
 //}

@@ -78,15 +78,15 @@ input_display_tail(Input *input, int start, int pad) {
 	char dbuf[INPUT_MAX_SIZE + 1];
 	int p = start;
 
-	input->vt->MoveTo(x, y);
+	vt102_move_to(input->vt, x, y);
 
 	if (p < input->nc) {
-		memcpy(dbuf, input->buffer + p, (input->nc - p) * sizeof(char));
+		memcpy(dbuf, input->buffer + p, input->nc - p);
 		dbuf[input->nc - p] = '\0';
-		input->vt->Write(dbuf);
+		vt102_puts(input->vt, dbuf, input->nc - p);
 	}
 
-	for (p = 0; p < pad; p++) input->vt->Write(" ");
+	for (p = 0; p < pad; p++) vt102_putc(input->vt, ' ');
 }
 
 static char *
@@ -99,7 +99,7 @@ input_position_caret(Input *input) {
 	int x = (input->col0 + input->pos) % input->con_cols;
 	int y = input->row0 + (input->col0 + input->pos) / input->con_cols;
 
-	input->vt->MoveTo(x, y);
+	vt102_move_to(input->vt, x, y);
 }
 
 /** Update row0 in case the screen could have scrolled. */
@@ -162,7 +162,6 @@ input_insert_string(Input *input, const char *str) {
 		}
 	}
 
-	int off = 0;
 	int i = 0;
 
 	while (i < ilen) {
@@ -227,7 +226,7 @@ input_seek_word(Input *input, int dir) {
 	if (dir == seek_forward) {
 		if (input->pos == input->nc) return;
 
-		while (true) {
+		while (1) {
 			input->pos += 1;
 
 			if (input->pos == input->nc) break;
@@ -238,7 +237,7 @@ input_seek_word(Input *input, int dir) {
 	} else {
 		if (input->pos == 0) return;
 
-		while (true) {
+		while (1) {
 			input->pos -= 1;
 
 			if (input->pos == 0) break;
@@ -335,11 +334,11 @@ input_history_seek(Input *input, int offs) {
 
 static void
 input_update_dimensions(Input *input) {
-	input->con_cols = input->vt->Width();
-	input->con_rows = input->vt->Height();
+	input->con_cols = vt102_width(input->vt);
+	input->con_rows = vt102_height(input->vt);
 
-	input->col0 = input->vt->CursorX();
-	input->row0 = input->vt->CursorY();
+	input->col0 = vt102_cursor_x(input->vt);
+	input->row0 = vt102_cursor_y(input->vt);
 }
 
 static void
@@ -381,7 +380,7 @@ input_read_line(Input *input, char **dstr) {
 
 void
 input_new_line(Input *input, const char *prompt) {
-	input->vt->Write(prompt);
+	vt102_puts(input->vt, prompt, 0);
 
 	input_update_dimensions(input);
 

@@ -7,7 +7,7 @@
 #include "terminal.h"
 
 static void SwitchShell(Terminal *terminal, int nr);
-static void DetermineColor(Terminal *terminal, VT102::CanvasChar &c, int &fg, int &bg);
+static void DetermineColor(Terminal *terminal, struct VT102_CanvasChar *c, int *fg, int *bg);
 static void Repaint(Terminal *terminal);
 
 Terminal *
@@ -66,21 +66,21 @@ terminal_free(Terminal *terminal) {
 }
 
 static void
-DetermineColor(Terminal *terminal, VT102::CanvasChar &c, int &fg, int &bg) {
+DetermineColor(Terminal *terminal, struct VT102_CanvasChar *c, int *fg, int *bg) {
 	int color[2] = { 7, 0 }; // init fg = white & bg = black
 	enum { FG, BG };
 
 	// overwrite character specific colors
-	if (c.use_fg) color[FG] = c.foreground;
-	if (c.use_bg) color[BG] = c.background;
+	if (c->use_fg) color[FG] = c->foreground;
+	if (c->use_bg) color[BG] = c->background;
 
 	// prevent invisible colors
-	if ((color[FG] == color[BG]) && (c.foreground != c.background)) {
+	if ((color[FG] == color[BG]) && (c->foreground != c->background)) {
 		if (color[FG] != 0) color[BG] = 0; else color[BG] = 7;
 	}
 
 	// swich colors when inverted
-	if (c.inverted) {
+	if (c->inverted) {
 		int col = color[FG];
 
 		color[FG] = color[BG];
@@ -88,10 +88,10 @@ DetermineColor(Terminal *terminal, VT102::CanvasChar &c, int &fg, int &bg) {
 	}
 
 	//  hide concealed cells
-	if (c.concealed) color[FG] = color[BG];
+	if (c->concealed) color[FG] = color[BG];
 
-	fg = color[FG];
-	bg = color[BG];
+	*fg = color[FG];
+	*bg = color[BG];
 }
 
 static void
@@ -103,7 +103,8 @@ SwitchShell(Terminal *terminal, int nr) {
 	terminal->shell = nr;
 
 	// it can be, that the geometry has changed
-	terminal->shells[terminal->shell]->vt102->SetSize(terminal->width, terminal->height);
+	VT102 *vt102 = terminal->shells[terminal->shell]->vt102;
+	vt102_set_size(vt102, terminal->width, terminal->height);
 
 	Repaint(terminal);
 }
@@ -119,23 +120,23 @@ Repaint(Terminal *terminal) {
 
 	// draw vt102 canvas
 	for (int y=0; y<terminal->height; y++) {
-		const VT102::CanvasChar *row = vt102->Canvas()[y];
+		struct VT102_CanvasChar *row = vt102_canvas(vt102)[y];
 
 		for (int x=0; x<terminal->width; x++) {
-			VT102::CanvasChar &cell = (VT102::CanvasChar &)row[x];
+			struct VT102_CanvasChar *cell = &row[x];
 
-			DetermineColor(terminal, cell, fg, bg);
+			DetermineColor(terminal, cell, &fg, &bg);
 
 			// print char
-			DrawGlyph(terminal->surface, terminal->font, x*cw, y*ch, cell.ch, fg, bg);
+			DrawGlyph(terminal->surface, terminal->font, x*cw, y*ch, cell->ch, fg, bg);
 
 			// double bold characters
-			if (cell.bold) {
-				DrawGlyph(terminal->surface, terminal->font, x*cw+1, y*ch, cell.ch, fg, -1);
+			if (cell->bold) {
+				DrawGlyph(terminal->surface, terminal->font, x*cw+1, y*ch, cell->ch, fg, -1);
 			}
 
 			// draw underlined
-			if (cell.underscore) {
+			if (cell->underscore) {
 				DrawLine(terminal->surface, x*cw, y*ch+ch-1, x*cw+cw-1, y*ch+ch-1, fg);
 				DrawLine(terminal->surface, x*cw, y*ch+ch-2, x*cw+cw-1, y*ch+ch-2, fg);
 			}
@@ -143,20 +144,19 @@ Repaint(Terminal *terminal) {
 	}
 
 	// draw cursor
-	if (vt102->CursorVisible()) {
-		int x = vt102->CursorX(), y = vt102->CursorY();
+	if (vt102_cursor_visible(vt102)) {
+		int x = vt102_cursor_x(vt102), y = vt102_cursor_y(vt102);
 
 		if (y < terminal->height) {
 			// the cursor can't get out of the screen
 			if (x >= terminal->width) x = terminal->width - 1;
 
-			VT102::CanvasChar &cell =
-				(VT102::CanvasChar &)vt102->Canvas()[y][x];
+			struct VT102_CanvasChar *cell = &vt102_canvas(vt102)[y][x];
 
-			DetermineColor(terminal, cell, fg, bg);
+			DetermineColor(terminal, cell, &fg, &bg);
 
 			// use inverse colors
-			DrawGlyph(terminal->surface, terminal->font, x*cw, y*ch, cell.ch, bg, fg);
+			DrawGlyph(terminal->surface, terminal->font, x*cw, y*ch, cell->ch, bg, fg);
 		}
 	}
 
@@ -164,23 +164,23 @@ Repaint(Terminal *terminal) {
 	fb_blit(terminal->surface, 0, 0, &terminal->geometry, 0);
 	fb_flip(&terminal->geometry);
 
-	vt102->Refreshed();
+	vt102_refreshed(vt102);
 }
 
 int
 terminal_update(Terminal *terminal) {
-	int ret = false;
+	int ret = 0;
 
 	VT102 *vt102 = terminal->shells[terminal->shell]->vt102;
 
 	//shell->HandleOutput();
 
-	if (vt102->ToRefresh()) {
-		ret = true;
+	if (vt102_to_refresh(vt102)) {
+		ret = 1;
 		Repaint(terminal);
 	}
 
-	if (vt102->ToRing()) vt102->BellSeen();
+	if (vt102_to_ring(vt102)) vt102_bell_seen(vt102);
 
 	return (ret);
 }
@@ -194,7 +194,7 @@ terminal_key_event(Terminal *terminal, KBD_Event *ev) {
 	int modifier = ev->modifier;
 	int state    = ev->state;
 
-	if (state != KBD_EVENT_STATE_PRESSED) return (true);
+	if (state != KBD_EVENT_STATE_PRESSED) return (1);
 
 	if (modifier & KBD_MOD_LALT) {
 		switch (key) {
@@ -207,5 +207,5 @@ terminal_key_event(Terminal *terminal, KBD_Event *ev) {
 		shell_key_event(terminal->shells[terminal->shell], ev);
 	}
 
-	return (true);
+	return (1);
 }

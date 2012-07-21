@@ -12,7 +12,7 @@ shell_new(void) {
 
 	shell->cmd = NULL;
 
-	shell->vt102 = new VT102();
+	shell->vt102 = vt102_new();
 
 	shell->cli = cli_new(shell->vt102);
 
@@ -31,7 +31,7 @@ shell_free(Shell *shell) {
 
 	cli_free(shell->cli);
 
-	delete (shell->vt102);
+	vt102_free(shell->vt102);
 }
 
 void
@@ -74,7 +74,7 @@ shell_main(void *thiz) {
 	}
 }
 
-bool
+int
 shell_key_event(Shell *shell, KBD_Event *ev) {
 	static const char *left   = "\033[D";
 	static const char *right  = "\033[C";
@@ -92,7 +92,7 @@ shell_key_event(Shell *shell, KBD_Event *ev) {
 	int modifier = ev->modifier;
 	int state    = ev->state;
 
-	if (state != KBD_EVENT_STATE_PRESSED) return (false);
+	if (state != KBD_EVENT_STATE_PRESSED) return (0);
 
 	if (modifier & KBD_MOD_CTRL) {
 		switch (key) {
@@ -100,20 +100,20 @@ shell_key_event(Shell *shell, KBD_Event *ev) {
 		}
 	} else {
 		switch (key) {
-			case KBD_KEY_LEFT:     shell->vt102->Write(left,   3); break;
-			case KBD_KEY_RIGHT:    shell->vt102->Write(right,  3); break;
-			case KBD_KEY_UP:       shell->vt102->Write(up,     3); break;
-			case KBD_KEY_DOWN:     shell->vt102->Write(down,   3); break;
-			case KBD_KEY_PAGEUP:   shell->vt102->Write(pgup,   4); break;
-			case KBD_KEY_PAGEDOWN: shell->vt102->Write(pgdown, 4); break;
-			case KBD_KEY_HOME:     shell->vt102->Write(home,   3); break;
-			case KBD_KEY_END:      shell->vt102->Write(end,    3); break;
-			case KBD_KEY_INSERT:   shell->vt102->Write(insert, 4); break;
-			case KBD_KEY_DELETE:   shell->vt102->Write(del,    4); break;
+			case KBD_KEY_LEFT:     vt102_puts(shell->vt102, left,   3); break;
+			case KBD_KEY_RIGHT:    vt102_puts(shell->vt102, right,  3); break;
+			case KBD_KEY_UP:       vt102_puts(shell->vt102, up,     3); break;
+			case KBD_KEY_DOWN:     vt102_puts(shell->vt102, down,   3); break;
+			case KBD_KEY_PAGEUP:   vt102_puts(shell->vt102, pgup,   4); break;
+			case KBD_KEY_PAGEDOWN: vt102_puts(shell->vt102, pgdown, 4); break;
+			case KBD_KEY_HOME:     vt102_puts(shell->vt102, home,   3); break;
+			case KBD_KEY_END:      vt102_puts(shell->vt102, end,    3); break;
+			case KBD_KEY_INSERT:   vt102_puts(shell->vt102, insert, 4); break;
+			case KBD_KEY_DELETE:   vt102_puts(shell->vt102, del,    4); break;
 
 			default:
 				if ((key <= KBD_KEY_DELETE) && (key > KBD_KEY_FIRST)) {
-					shell->vt102->Write((char *)&code, 1);
+					vt102_puts(shell->vt102, (char *)&code, 1);
 				}
 			break;
 		}
@@ -124,9 +124,9 @@ shell_key_event(Shell *shell, KBD_Event *ev) {
 	if (key == KBD_KEY_RETURN) {
 		input_read_line(shell->input, &shell->cmd);
 
-		shell->vt102->Write(CR);
-		shell->vt102->Write(LF);
+		vt102_putc(shell->vt102, CR);
+		vt102_putc(shell->vt102, LF);
 	}
 
-	return (true);
+	return (1);
 }

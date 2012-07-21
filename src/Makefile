@@ -42,7 +42,7 @@ AFLAGS   +=
 
 else
 
-CFLAGS   += -O0 -g -Wall -DDEBUG
+CFLAGS   += -O0 -g -DDEBUG
 AFLAGS   += -g
 
 endif
@@ -103,8 +103,7 @@ clean:
 	$(CPP) $(INCLUDES) $(CPPFLAGS) -c -o $*.o $<
 
 %.o: %.c
-	$(CPP) $(INCLUDES) $(CPPFLAGS) -c -o $*.o $<
-#	$(CC) $(INCLUDES) $(CFLAGS) -c -o $*.o $<
+	$(CC) $(INCLUDES) $(CFLAGS) -c -o $*.o $<
 
 %.o: %.s
 	$(AS) $(INCLUDES) $(AFLAGS) -o $*.o $<

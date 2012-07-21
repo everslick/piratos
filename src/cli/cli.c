@@ -138,7 +138,7 @@ cli_print(CLI *cli, const char *fmt, ...) {
 	n = vsnprintf(buffer, sizeof (buffer), fmt, ap);
 	va_end(ap);
 
-	cli->vt->Write(buffer, n);
+	vt102_puts(cli->vt, buffer, n);
 
 	return (n);
 }

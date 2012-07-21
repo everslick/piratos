@@ -5,11 +5,10 @@
 #include <kernel/os/FreeRTOS.h>
 #include <kernel/os/task.h>
 
-#include <kernel/hal/mouse/mouse.h> // mouse
-#include <kernel/hal/kbd/kbd.h>	  // keyboard
-#include <kernel/hal/fb/fb.h>		 // framebuffer
+#include <kernel/hal/mouse/mouse.h>
+#include <kernel/hal/kbd/kbd.h>
+#include <kernel/hal/fb/fb.h>
 
-//#include <lib/gfx/bitmap.h>
 #include <lib/gfx/glyph.h>
 
 #include "term/terminal.h"
@@ -18,17 +17,13 @@
 
 static const char *str = "pir{A}tos version " VERSION " (" PLATFORM ")";
 
-static int quit = 0;
-
 extern GFX_Bitmap piratos_logo;
 extern GFX_Bitmap piratos_font;
 
-//extern "C"{
 void piratos(void);
-//}
 
 static void
-AnimationTask(void *parameters) {
+AnimationTask(void *arg) {
 	FB_Color bg = { 0x20, 0x10, 0x60, 0xff };
 	FB_Surface *logo = NULL;
 	FB_Rectangle dst, upd;
@@ -42,7 +37,7 @@ AnimationTask(void *parameters) {
 	dst.h = logo->height;
 	dir = 3;
 
-	while (!quit) {
+	while (1) {
 		dst.x = pos;
 		pos += dir;
 
@@ -57,12 +52,12 @@ AnimationTask(void *parameters) {
 }
 
 static void
-ShellTask(void *arg) {
+TerminalTask(void *arg) {
 	Terminal *terminal = (Terminal *)arg;
 	MOUSE_Event mouse_ev;
 	KBD_Event kbd_ev;
 
-	while (!quit) {
+	while (1) {
 		if (mouse_poll(&mouse_ev)) {
 			//printf("mouse poll: %i, %i, %i, %i\n",
 			//	mouse_ev.x, mouse_ev.y, mouse_ev.state, mouse_ev.button);
@@ -73,15 +68,13 @@ ShellTask(void *arg) {
 
 			if (kbd_ev.state == KBD_EVENT_STATE_PRESSED)
 				if (kbd_ev.symbol == KBD_KEY_ESCAPE)
-					if (kbd_ev.modifier == KBD_MOD_LALT)
-						{ quit = 1; exit(0); }
+					if (kbd_ev.modifier == KBD_MOD_LALT) exit(0);
 
 			terminal_key_event(terminal, &kbd_ev);
 		}
 
 		terminal_update(terminal);
 
-		//usleep(10*1000);
 		vTaskDelay(10);
 	}
 }
@@ -111,8 +104,8 @@ piratos(void) {
 
 	Terminal *terminal = terminal_new(&piratos_font);
 
-	xTaskCreate(AnimationTask, "LOGOx",  configMINIMAL_STACK_SIZE, NULL, 8, NULL);
-	xTaskCreate(ShellTask,     "SHELLx", configMINIMAL_STACK_SIZE, terminal, 12, NULL);
+	xTaskCreate(AnimationTask, "Animation", configMINIMAL_STACK_SIZE, NULL, 16, NULL);
+	xTaskCreate(TerminalTask,  "Terminal",  configMINIMAL_STACK_SIZE, terminal, 12, NULL);
 
 	vTaskStartScheduler();
 }

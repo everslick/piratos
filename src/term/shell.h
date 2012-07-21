@@ -23,7 +23,7 @@ typedef struct {
 Shell *shell_new(void);
 void   shell_free(Shell *shell);
 
-bool shell_key_event(Shell *shell, KBD_Event *ev);
+int shell_key_event(Shell *shell, KBD_Event *ev);
 
 void shell_main(void *thiz);
 

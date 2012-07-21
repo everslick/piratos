@@ -65,13 +65,15 @@ MODULES  := .                            \
             kernel/hal/kbd/$(PLATFORM)   \
             kernel/hal/mouse             \
             kernel/hal/mouse/$(PLATFORM) \
+            srv/dpy                      \
             lib/gfx                      \
+            lib/sys                      \
             term                         \
             cli                          \
             fs                           \
             fs/fat
 
-CPPFLAGS := $(CFLAGS) -fpermissive
+CPPFLAGS := $(CFLAGS)
 
 CFLAGS   += -std=gnu99
 
@@ -89,7 +91,7 @@ INCLUDES := $(addprefix -I,$(SRC_DIR))
 OBJ = $(AOBJ) $(COBJ) $(CPPOBJ)
 
 linux: $(OBJ)
-	$(CPP) $(OBJ) $(LFLAGS) -o $(TARGET)
+	$(CC) $(OBJ) $(LFLAGS) -o $(TARGET)
 
 pi: $(OBJ)
 	$(LD) $(LFLAGS) -T $(LD_SCR) $(OBJ) -Map $(MAP) -o $(KERNEL)

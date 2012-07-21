@@ -4,9 +4,9 @@
  *
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
+
+#include <lib/sys/log.h>
 
 #include "vt102.h"
 
@@ -68,8 +68,6 @@ static void CursorPosRestore(VT102 *vt102);
 
 static void SelectCharSet(VT102 *vt102, int g, char set);
 
-static int DebugOut(const char *fmt, ...);
-
 static struct VT102_CursorPos *
 SaveCursorPos(int x, int y, struct VT102_CanvasChar *attr, int orig, struct VT102_CursorPos *pos) {
 	struct VT102_CursorPos *cp = (struct VT102_CursorPos *)malloc(sizeof (struct VT102_CursorPos));
@@ -126,7 +124,7 @@ vt102_new(void) {
 
 	vt102->mode.cursor_visible = 1;	// TODO load default values
 	vt102->mode.wrap_around    = 1;
-	vt102->mode.new_line       = 0;
+	vt102->mode.new_line       = 1;
 	vt102->mode.origin         = 0;
 	vt102->mode.insert         = 0;
 
@@ -245,21 +243,6 @@ vt102_set_size(VT102 *vt102, int w, int h) {
 	SetSize(vt102, w, h);
 }
 
-int
-DebugOut(const char *fmt, ...) {
-	int n = 0;
-
-//#if 0
-	va_list ap;
-
-	va_start(ap, fmt);
-	n = vprintf(fmt, ap);
-	va_end(ap);
-//#endif
-
-	return (n);
-}
-
 void
 ScrollUp(VT102 *vt102, int count) {
 	ScrollUpFrom(vt102, count, vt102->scroll_region_top);
@@ -272,8 +255,6 @@ ScrollDown(VT102 *vt102, int count) {
 	
 void
 SelectCharSet(VT102 *vt102, int g, char set) {
-	//DebugOut("New CharSet selected: %i, %c\n", g, set);
-
 	// First reset all chars
 	for (int i=0; i<=255; i++) vt102->char_set[i] = i;
 
@@ -403,7 +384,8 @@ SetSize(VT102 *vt102, int w, int h) {
 	// change scroll region
 	if ((vt102->scroll_region_top == 0) && (vt102->scroll_region_bottom == vt102->height - 1)) {
 		vt102->scroll_region_bottom = h - 1;
-		DebugOut("VT102->SetSize: upadting scroll region bottom to %i\n", vt102->scroll_region_bottom);
+		syslog(SYS_LOG_DEBUG, "VT102->SetSize: upadting scroll region bottom to %i\n",
+			vt102->scroll_region_bottom);
 	}
 
 	// save new size
@@ -412,7 +394,7 @@ SetSize(VT102 *vt102, int w, int h) {
 
 	vt102_changed(vt102);
 
-	DebugOut("VT102->SetSize: %i, %i\n", vt102->width, vt102->height);
+	syslog(SYS_LOG_DEBUG, "VT102->SetSize: %i, %i\n", vt102->width, vt102->height);
 
 	return;
 }
@@ -520,7 +502,7 @@ vt102_putc(VT102 *vt102, char ch) {
 				case  CR: KeyCarriageReturn(vt102);  break;
 				case  LF:
 				case  FF:
-				case  VT: KeyLineFeed(vt102, 1);    break;
+				case  VT: KeyLineFeed(vt102, 1);     break;
 				case  HT: KeyTab(vt102);             break;
 				case  BS:
 				case DEL: KeyBackspace(vt102);       break;
@@ -745,7 +727,7 @@ DecodeEscapeSequence(VT102 *vt102, char code) {
 		case 'q': break; // show lamp on keyboard (1..4, 0 = off)
 
 		default:
-			DebugOut("unknown escape sequence %i\n", code);
+			syslog(SYS_LOG_WARN, "unknown escape sequence %i\n", code);
 		break;
 	}
 }
@@ -784,7 +766,7 @@ DecodeEscapeCode(VT102 *vt102, char code) {
 		case '>': break; // numeric keypad
 		case 'c': break; // reset terminal
 
-		default: DebugOut("unknown escape code %i\n", code);
+		default: syslog(SYS_LOG_WARN, "unknown escape code %i\n", code);
 	}
 }
 
@@ -798,7 +780,7 @@ DecodeEscapeSingleCode(VT102 *vt102, char code) {
 		case '6': break;
 		case '8': break; // show test pattern
 
-		default: DebugOut("unknown escape single code %i\n", code);
+		default: syslog(SYS_LOG_WARN, "unknown escape single code %i\n", code);
 	}
 }
 
@@ -1063,9 +1045,7 @@ KeyInsert(VT102 *vt102, char ch) {
 
 void
 KeyBell(VT102 *vt102) {
-	// misuse the incoming console (tty) to produce the bell for us
-	//DebugOut("\a"); fflush(stdin);
-
+	syslog(SYS_LOG_DEBUG, "console bell!!!\n");
 	vt102->bell = 1;
 }
 
@@ -1087,13 +1067,14 @@ SetScrollRegion(VT102 *vt102, int top, int bottom) {
 	vt102->scroll_region_top = top;
 	vt102->scroll_region_bottom = bottom;
 
-	DebugOut("VT102->SetScrollRegion to %i, %i\n", top, bottom);
+	syslog(SYS_LOG_DEBUG, "VT102->SetScrollRegion to %i, %i\n", top, bottom);
 }
 
 void
 CursorPosSave(VT102 *vt102) {
 	vt102->saved_cursor_pos =
-		SaveCursorPos(vt102->cursor_x, vt102->cursor_y, &vt102->default_char, vt102->mode.origin, vt102->saved_cursor_pos);
+		SaveCursorPos(vt102->cursor_x, vt102->cursor_y, &vt102->default_char,
+		vt102->mode.origin, vt102->saved_cursor_pos);
 }
 
 void
@@ -1170,7 +1151,7 @@ SetModes(VT102 *vt102, int *attributes, int count) {
 			case 20: vt102->mode.new_line = 1;                         break;
 			case 25: SetCursorVisible(vt102, 1);                       break;
 
-			default: DebugOut("unknown mode set %i\n", attributes[i]);
+			default: syslog(SYS_LOG_WARN, "unknown mode set %i\n", attributes[i]);
 		}
 	}
 }
@@ -1185,7 +1166,7 @@ ResetModes(VT102 *vt102, int *attributes, int count) {
 			case 20: vt102->mode.new_line    = 0;                      break;
 			case 25: SetCursorVisible(vt102, 0);                       break;
 
-			default: DebugOut("unknown mode reset %i\n", attributes[i]);
+			default: syslog(SYS_LOG_WARN, "unknown mode reset %i\n", attributes[i]);
 		}
 	}
 }

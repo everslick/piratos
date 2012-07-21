@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include <lib/gfx/glyph.h>
+#include <srv/dpy/dpy.h>
 
 #include "draw.h"
 
@@ -40,8 +41,8 @@ terminal_new(GFX_Bitmap *bitmap) {
 	r.h = terminal->geometry.h + 4;
 
 	// draw white frame
-	FB_Color bg = { 0x80, 0xff, 0x80, 0xff  };
-	fb_fill(0, &r, &bg);
+	FB_Color bg = { 0x80, 0xff, 0x80, 0xff };
+	dpy_fill(&r, &bg);
 
 	// create virtual shells
 	for (int i=0; i<NUM_VIRT_TERMS; i++) {
@@ -161,8 +162,8 @@ Repaint(Terminal *terminal) {
 	}
 
 	// blit window to screen
-	fb_blit(terminal->surface, 0, 0, &terminal->geometry, 0);
-	fb_flip(&terminal->geometry);
+	dpy_blit(terminal->surface, 0, &terminal->geometry);
+	dpy_flip(&terminal->geometry);
 
 	vt102_refreshed(vt102);
 }

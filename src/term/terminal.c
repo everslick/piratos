@@ -13,8 +13,6 @@ static void Repaint(Terminal *terminal);
 
 Terminal *
 terminal_new(GFX_Bitmap *bitmap) {
-	FB_Rectangle r;
-
 	Terminal *terminal = (Terminal *)malloc(sizeof (Terminal));
 
 	terminal->width  = 80;
@@ -35,15 +33,6 @@ terminal_new(GFX_Bitmap *bitmap) {
 	// create window surface
 	terminal->surface = fb_create_surface(terminal->geometry.w, terminal->geometry.h, FB_FORMAT_BEST);
 
-	r.x = terminal->geometry.x - 2;
-	r.y = terminal->geometry.y - 2;
-	r.w = terminal->geometry.w + 4;
-	r.h = terminal->geometry.h + 4;
-
-	// draw white frame
-	FB_Color bg = { 0x80, 0xff, 0x80, 0xff };
-	dpy_fill(&r, &bg);
-
 	// create virtual shells
 	for (int i=0; i<NUM_VIRT_TERMS; i++) {
 		terminal->shells[i] = shell_new();
@@ -51,6 +40,8 @@ terminal_new(GFX_Bitmap *bitmap) {
 
 	// activate first virtual shell
 	SwitchShell(terminal, 0);
+
+	xTaskCreate(terminal_update, "Terminal", configMINIMAL_STACK_SIZE, terminal, 12, NULL);
 
 	return (terminal);
 }
@@ -168,25 +159,25 @@ Repaint(Terminal *terminal) {
 	vt102_refreshed(vt102);
 }
 
-int
-terminal_update(Terminal *terminal) {
-	int ret = 0;
+void
+terminal_update(void *arg) {
+	Terminal *terminal = (Terminal *)arg;
+	VT102 *vt102;
 
-	VT102 *vt102 = terminal->shells[terminal->shell]->vt102;
+	while (1) {
+		vt102 = terminal->shells[terminal->shell]->vt102;
 
-	//shell->HandleOutput();
+		if (vt102_to_refresh(vt102)) {
+			Repaint(terminal);
+		}
 
-	if (vt102_to_refresh(vt102)) {
-		ret = 1;
-		Repaint(terminal);
+		if (vt102_to_ring(vt102)) vt102_bell_seen(vt102);
+
+		vTaskDelay(10);
 	}
-
-	if (vt102_to_ring(vt102)) vt102_bell_seen(vt102);
-
-	return (ret);
 }
 
-int
+void
 terminal_key_event(Terminal *terminal, KBD_Event *ev) {
 	int key_press_handled = 0;
 
@@ -195,7 +186,7 @@ terminal_key_event(Terminal *terminal, KBD_Event *ev) {
 	int modifier = ev->modifier;
 	int state    = ev->state;
 
-	if (state != KBD_EVENT_STATE_PRESSED) return (1);
+	if (state != KBD_EVENT_STATE_PRESSED) return;
 
 	if (modifier & KBD_MOD_LALT) {
 		switch (key) {
@@ -207,6 +198,4 @@ terminal_key_event(Terminal *terminal, KBD_Event *ev) {
 	if (!key_press_handled) {
 		shell_key_event(terminal->shells[terminal->shell], ev);
 	}
-
-	return (1);
 }

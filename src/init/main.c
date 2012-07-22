@@ -23,8 +23,10 @@ static const char *str = "pir{A}tos version " VERSION " (" PLATFORM ")";
 extern GFX_Bitmap piratos_logo;
 extern GFX_Bitmap piratos_font;
 
+static Terminal *terminal;
+
 static void
-AnimationTask(void *arg) {
+animation_task(void *arg) {
 	FB_Color bg = { 0x20, 0x10, 0x60, 0xff };
 	FB_Surface *logo = NULL;
 	FB_Rectangle dst;
@@ -53,11 +55,9 @@ AnimationTask(void *arg) {
 }
 
 static void
-TerminalTask(void *arg) {
+event_task(void *arg) {
 	MOUSE_Event mouse_ev;
 	KBD_Event kbd_ev;
-
-	Terminal *terminal = terminal_new(&piratos_font);
 
 	while (1) {
 		if (dpy_mouse_poll(&mouse_ev)) {
@@ -73,31 +73,30 @@ TerminalTask(void *arg) {
 			terminal_key_event(terminal, &kbd_ev);
 		}
 
-		terminal_update(terminal);
-
 		vTaskDelay(10);
 	}
 }
 
 void
 piratos(void) {
-	//FB_Color bg = { 0x20, 0x10, 0x60, 0xff };
-	//FB_Color fg = { 0xc0, 0x60, 0x10, 0xff };
-	//FB_Surface *font = NULL;
+	FB_Color fg = { 0xc0, 0x60, 0x10, 0xff };
+	FB_Surface *font = NULL;
 
 	syslog(SYS_LOG_INFO, "%s\n", str);
+
+	cli_register_commands();
 
 	dpy_init();
 	fs_init();
 
-	//font = gfx_glyph_load(&piratos_font, &fg);
+	terminal = terminal_new(&piratos_font);
 
-	//gfx_glyph_string(NULL, font, 10, 540, str);
+	font = gfx_glyph_load(&piratos_font, &fg);
 
-	cli_register_commands();
+	gfx_glyph_string(NULL, font, 10, 540, str);
 
-	//xTaskCreate(AnimationTask, "Animation", configMINIMAL_STACK_SIZE, NULL, 16, NULL);
-	xTaskCreate(TerminalTask,  "Terminal",  configMINIMAL_STACK_SIZE, NULL, 12, NULL);
+	xTaskCreate(animation_task, "Animation", configMINIMAL_STACK_SIZE, NULL, 16, NULL);
+	xTaskCreate(event_task,     "EventLoop", configMINIMAL_STACK_SIZE, NULL, 12, NULL);
 
 	vTaskStartScheduler();
 }

@@ -6,7 +6,7 @@
 
 #include "shell.h"
 
-#define NUM_VIRT_TERMS 2
+#define NUM_VIRT_TERMS 8
 
 typedef struct {
 	FB_Rectangle geometry;
@@ -21,7 +21,7 @@ typedef struct {
 Terminal *terminal_new(GFX_Bitmap *bitmap);
 void      terminal_free(Terminal *terminal);
 
-int terminal_update(Terminal *terminal);
-int terminal_key_event(Terminal *terminal, KBD_Event *ev);
+void terminal_update(void *arg);
+void terminal_key_event(Terminal *terminal, KBD_Event *ev);
 
 #endif // _TERMINAL_H_

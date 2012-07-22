@@ -13,5 +13,6 @@ int dpy_kbd_poll(KBD_Event *ev);
 int dpy_mouse_poll(MOUSE_Event *ev);
 
 void dpy_init(void);
+void dpy_update(void);
 
 #endif // _SRV_DPY_H_

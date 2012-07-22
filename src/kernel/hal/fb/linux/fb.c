@@ -88,16 +88,14 @@ bits_per_pixel(FB_Format format) {
 
 int
 fb_init(void) {
-	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_NOPARACHUTE);
+	SDL_InitSubSystem(SDL_INIT_VIDEO);
 
 	return (0);
 }
 
 int
 fb_fini(void) {
-	//SDL_QuitSubsystem(SDL_INIT_VIDEO);
-
-	SDL_Quit();
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
 	return (0);
 }

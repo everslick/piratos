@@ -2,7 +2,7 @@
 
 void
 cmd_quit_help(CLI *cli) {
-	cli_print(cli, "'quit' terminates the shell.\n");
+	printf("'quit' terminates the shell.\n");
 }
 
 int

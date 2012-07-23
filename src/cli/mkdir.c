@@ -13,8 +13,8 @@ static struct option const long_options[] = {
 
 void
 cmd_mkdir_help(CLI *cli) {
-	cli_print(cli, "'mkdir' creates a new directory.                        \n\n");
-	cli_print(cli, 
+	printf("'mkdir' creates a new directory.                        \n\n");
+	printf(
 		"Usage: mkdir [options] <path>                                 \n"
 		"Options:                                                      \n"
 		"  -p, --parents    Create needed parents for <path>           \n"
@@ -35,18 +35,18 @@ create_directory(CLI *cli, char *path, int parents, int verbose) {
 		dirp = fl_opendir(dir, &dirstat);
 
 		if (dirp) {
-			cli_print(cli, "mkdir: cannot create directory '%s': File exists\n", dir);
+			printf("mkdir: cannot create directory '%s': File exists\n", dir);
 			fl_closedir(dirp);
 			return (-1);
 		}
 
 		if ((fl_createdirectory(dir) == -1)) {
-			cli_print(cli, "mkdir: could not create '%s', try '-p'\n", dir);
+			printf("mkdir: could not create '%s', try '-p'\n", dir);
 			return (-1);
 		}
 
 		if (verbose) {
-			cli_print(cli, "mkdir: created directory '%s'\n", dir);
+			printf("mkdir: created directory '%s'\n", dir);
 		}
 	} else {
 		dirs[i] = strtok_r(dir, "/", &save);
@@ -60,10 +60,10 @@ create_directory(CLI *cli, char *path, int parents, int verbose) {
 			ptr += sprintf(ptr, "/%s", dirs[i]);
 
 			if (fl_createdirectory(buf)) {
-				cli_print(cli, "mkdir: could not create '%s'\n", buf);
+				printf("mkdir: could not create '%s'\n", buf);
 			} else {
 				if (verbose) {
-					cli_print(cli, "mkdir: created directory '%s'\n", buf);
+					printf("mkdir: created directory '%s'\n", buf);
 				}
 			}
 
@@ -90,7 +90,7 @@ cmd_mkdir_exec(CLI *cli, char *argv[]) {
 	}
 
 	if (argc - optind < 2) {
-		cli_print(cli, "mkdir - incorrect number of arguments. Try 'man mkdir'\n");
+		printf("mkdir - incorrect number of arguments. Try 'man mkdir'\n");
 
 		return (-1);
 	}

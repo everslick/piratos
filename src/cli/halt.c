@@ -4,7 +4,7 @@
 
 void
 cmd_halt_help(CLI *cli) {
-	cli_print(cli, "'halt' terminates the OS.\n");
+	printf("'halt' terminates the OS.\n");
 }
 
 int

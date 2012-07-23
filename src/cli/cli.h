@@ -9,6 +9,8 @@
 #define MAX_COMMAND_LINE 1<<16
 #define MAX_ARGUMENT_NUM 1<<8
 
+#define printf(_FORMAT_, ...) cli_printf(cli, _FORMAT_, ##__VA_ARGS__)
+
 typedef struct {
 	char cli_prompt[PATH_MAX];
 	char cli_cwd[PATH_MAX];
@@ -26,7 +28,7 @@ typedef struct {
 void cli_register_commands(void);
 int  cli_num_args(char **args);
 
-int  cli_print(CLI *cli, const char *fmt, ...);
+int  cli_printf(CLI *cli, const char *fmt, ...);
 void cli_clean_path(CLI *cli, char *path, char *cleaned);
 void cli_parse_args(char *buffer, char **args, int *nargs);
 

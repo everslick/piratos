@@ -4,9 +4,9 @@
 
 void
 cmd_ls_help(CLI *cli) {
-	cli_print(cli, "'ls' lists files and directories.                          \n");
-	cli_print(cli, "                                                           \n");
-	cli_print(cli, "If no path is given the current working directory is used. \n");
+	printf("'ls' lists files and directories.                          \n");
+	printf("                                                           \n");
+	printf("If no path is given the current working directory is used. \n");
 }
 
 void
@@ -18,9 +18,9 @@ list_directory(CLI *cli, const char *path) {
 
         while (fl_readdir(&dirstat, &dirent) == 0) {
             if (dirent.is_dir) {
-                cli_print(cli, "%s \t<DIR>\n", dirent.filename);
+                printf("%s \t<DIR>\n", dirent.filename);
             } else {
-                cli_print(cli, "%s \t[%d bytes]\n", dirent.filename, (int)dirent.size);
+                printf("%s \t[%d bytes]\n", dirent.filename, (int)dirent.size);
             }
         }
 
@@ -34,7 +34,7 @@ cmd_ls_exec(CLI *cli, char *argv[]) {
 	char path[PATH_MAX];
 
 	if (argc > 2) {
-		cli_print(cli, "Too many arguments to 'ls'\n");
+		printf("Too many arguments to 'ls'\n");
 
 		return (-1);
 	}
@@ -46,7 +46,7 @@ cmd_ls_exec(CLI *cli, char *argv[]) {
 	}
 
 	if (!fl_is_dir(path)) {
-		cli_print(cli, "Invalid directory '%s'\n", argv[1]);
+		printf("Invalid directory '%s'\n", argv[1]);
 
 		return (-1);
 	}

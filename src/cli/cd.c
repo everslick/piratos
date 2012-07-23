@@ -6,7 +6,7 @@
 
 void
 cmd_cd_help(CLI *cli) {
-	cli_print(cli, "'cd' changes the current working directory.\n");
+	printf("'cd' changes the current working directory.\n");
 }
 
 int
@@ -15,13 +15,13 @@ cmd_cd_exec(CLI *cli, char *argv[]) {
 	char path[PATH_MAX];
 
 	if (argc > 2) {
-		cli_print(cli, "Too many arguments to 'cd'\n");
+		printf("Too many arguments to 'cd'\n");
 
 		return (-1);
 	}
 
 	if (argc < 2) {
-		cli_print(cli, "No directory specified. Try 'man cd'\n");
+		printf("No directory specified. Try 'man cd'\n");
 
 		return (-1);
 	}
@@ -33,7 +33,7 @@ cmd_cd_exec(CLI *cli, char *argv[]) {
 	}
 
 	if (!fl_is_dir(path)) {
-		cli_print(cli, "Invalid directory '%s'\n", path);
+		printf("Invalid directory '%s'\n", path);
 
 		return (-1);
 	}

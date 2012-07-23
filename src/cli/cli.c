@@ -37,6 +37,7 @@ CLI_COMMAND_PROTOTYPE(mv)
 CLI_COMMAND_PROTOTYPE(pwd)
 CLI_COMMAND_PROTOTYPE(quit)
 CLI_COMMAND_PROTOTYPE(rm)
+CLI_COMMAND_PROTOTYPE(tetris)
 CLI_COMMAND_PROTOTYPE(touch)
 
 void
@@ -60,6 +61,7 @@ cli_register_commands(void) {
 	CLI_REGISTER_COMMAND(pwd)
 	CLI_REGISTER_COMMAND(quit)
 	CLI_REGISTER_COMMAND(rm)
+	CLI_REGISTER_COMMAND(tetris)
 	CLI_REGISTER_COMMAND(touch)
 }
 
@@ -129,7 +131,7 @@ cli_parse_args(char *buffer, char **args, int *nargs) {
 }
 
 int
-cli_print(CLI *cli, const char *fmt, ...) {
+cli_printf(CLI *cli, const char *fmt, ...) {
 	char buffer[4096];
 	va_list ap;
 	int n;

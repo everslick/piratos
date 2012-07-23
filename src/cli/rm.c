@@ -44,7 +44,7 @@ rm_recursive(CLI *cli, const char *path, int verbose) {
 				r2 = fl_remove(buf);
 
 				if (verbose) {
-					cli_print(cli, "rm: removing '%s'\n", buf);
+					printf("rm: removing '%s'\n", buf);
 				}
 			}
 
@@ -58,7 +58,7 @@ rm_recursive(CLI *cli, const char *path, int verbose) {
 		r = fl_remove(path);
 
 		if (verbose) {
-			cli_print(cli, "rm: removing '%s'\n", path);
+			printf("rm: removing '%s'\n", path);
 		}
 	}
 
@@ -68,13 +68,13 @@ rm_recursive(CLI *cli, const char *path, int verbose) {
 static int
 rm_single(CLI *cli, const char *path, int verbose) {
 	if (fl_remove(path)) {
-		cli_print(cli,  "rm: could not remove file '%s'\n", path);
+		printf( "rm: could not remove file '%s'\n", path);
 
 		return (1);
 	}
 
 	if (verbose) {
-		cli_print(cli, "rm: removing '%s'\n", path);
+		printf("rm: removing '%s'\n", path);
 	}
 
 	return (0);
@@ -91,12 +91,12 @@ rm_scope(const char *path) {
 
 void
 cmd_rm_help(CLI *cli) {
-	cli_print(cli, "'rm' removes files and directories.                           \n");
-	cli_print(cli, "                                                              \n");
-	cli_print(cli, "Usage:  rm [options] <path>                                   \n");
-	cli_print(cli, "Options:                                                      \n");
-	cli_print(cli, "  -r, --recursive  Recursively remove sub directories         \n");
-	cli_print(cli, "  -v, --verbose    Be extremely noisy about what is happening \n");
+	printf("'rm' removes files and directories.                           \n");
+	printf("                                                              \n");
+	printf("Usage:  rm [options] <path>                                   \n");
+	printf("Options:                                                      \n");
+	printf("  -r, --recursive  Recursively remove sub directories         \n");
+	printf("  -v, --verbose    Be extremely noisy about what is happening \n");
 }
 
 int
@@ -116,7 +116,7 @@ cmd_rm_exec(CLI *cli, char *argv[]) {
 	}
 
 	if (argc - optind < 2) {
-		cli_print(cli, "rm: insufficient number of arguments. Try 'man rm'\n");
+		printf("rm: insufficient number of arguments. Try 'man rm'\n");
 
 		return (-1);
 	}
@@ -133,7 +133,7 @@ cmd_rm_exec(CLI *cli, char *argv[]) {
 
 			case RM_DIR:
 				if (!recursive) {
-					cli_print(cli, "%s is a directory, use -r to remove it.\n", path);
+					printf("%s is a directory, use -r to remove it.\n", path);
 					ret++;
 				} else {
 					ret += rm_recursive(cli, path, verbose);

@@ -59,10 +59,10 @@ shell_main(void *thiz) {
 		if (!strcmp(args[0], "man")) {
 			if (nargs == 2) {
 				if (cli_cmd_help(s->cli, args) != 0) {
-					cli_print(s->cli, "man: no manual for command '%s' available\n", args[1]);
+					cli_printf(s->cli, "man: no manual for command '%s' available\n", args[1]);
 				}
 			} else {
-				cli_print(s->cli, "USAGE: man [command]\n");
+				cli_printf(s->cli, "USAGE: man [command]\n");
 			}
 
 			continue;
@@ -70,7 +70,7 @@ shell_main(void *thiz) {
 
 		if (cli_cmd_exec(s->cli, args) == 0) continue;
 
-		cli_print(s->cli, "%s: command not found\n", args[0]);
+		cli_printf(s->cli, "%s: command not found\n", args[0]);
 	}
 }
 
